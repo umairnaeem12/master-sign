@@ -17,36 +17,55 @@ export function useFirebaseProducts() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasFetched, setHasFetched] = useState(false);
 
   const fetchProducts = useCallback(async () => {
+    if (hasFetched) {
+      console.log('🔄 Products already fetched, skipping...');
+      return;
+    }
+    
     try {
       setLoading(true);
       setError(null);
+      setHasFetched(true);
+      
+      console.log('🔄 Fetching products from Firebase...');
       const result = await getProductsFunction({});
       const response = result.data as any;
       
       if (response.success) {
-        setProducts(response.data);
+        console.log(`✅ Successfully fetched ${response.data?.length || 0} products`);
+        setProducts(response.data || []);
       } else {
-        setError('Failed to fetch products');
+        console.error('❌ Failed to fetch products:', response);
+        setError('Failed to fetch products from server');
       }
     } catch (err) {
-      console.error('Error fetching products:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch products');
+      console.error('❌ Error fetching products:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch products';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [hasFetched]);
+
+  // Auto-fetch products on mount
+  useEffect(() => {
+    console.log('🔄 useFirebaseProducts: Auto-fetching products on mount');
+    fetchProducts();
+  }, [fetchProducts]);
 
   const fetchProductsByCategory = useCallback(async (category: ProductCategory) => {
     try {
       setLoading(true);
       setError(null);
+      
       const result = await getProductsByCategoryFunction({ category });
       const response = result.data as any;
       
       if (response.success) {
-        setProducts(response.data);
+        setProducts(response.data || []);
       } else {
         setError('Failed to fetch products by category');
       }
@@ -62,6 +81,7 @@ export function useFirebaseProducts() {
     try {
       setLoading(true);
       setError(null);
+      
       const result = await getProductByIdFunction({ productId: id });
       const response = result.data as any;
       
@@ -84,11 +104,12 @@ export function useFirebaseProducts() {
     try {
       setLoading(true);
       setError(null);
+      
       const result = await searchProductsFunction({ query });
       const response = result.data as any;
       
       if (response.success) {
-        setProducts(response.data);
+        setProducts(response.data || []);
       } else {
         setError('Failed to search products');
       }
@@ -117,31 +138,50 @@ export function useFirebaseCategories() {
   const [categories, setCategories] = useState<CategoryData[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasFetched, setHasFetched] = useState(false);
 
   const fetchCategories = useCallback(async () => {
+    if (hasFetched) {
+      console.log('🔄 Categories already fetched, skipping...');
+      return;
+    }
+    
     try {
       setLoading(true);
       setError(null);
+      setHasFetched(true);
+      
+      console.log('🔄 Fetching categories from Firebase...');
       const result = await getCategoriesFunction({});
       const response = result.data as any;
       
       if (response.success) {
-        setCategories(response.data);
+        console.log(`✅ Successfully fetched ${response.data?.length || 0} categories`);
+        setCategories(response.data || []);
       } else {
-        setError('Failed to fetch categories');
+        console.error('❌ Failed to fetch categories:', response);
+        setError('Failed to fetch categories from server');
       }
     } catch (err) {
       console.error('Error fetching categories:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch categories');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch categories';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [hasFetched]);
+
+  // Auto-fetch categories on mount
+  useEffect(() => {
+    console.log('🔄 useFirebaseCategories: Auto-fetching categories on mount');
+    fetchCategories();
+  }, [fetchCategories]);
 
   const fetchCategoryById = useCallback(async (categoryId: string) => {
     try {
       setLoading(true);
       setError(null);
+      
       const result = await getCategoryByIdFunction({ categoryId });
       const response = result.data as any;
       
@@ -164,11 +204,12 @@ export function useFirebaseCategories() {
     try {
       setLoading(true);
       setError(null);
+      
       const result = await getSubCategoriesFunction({ categoryId });
       const response = result.data as any;
       
       if (response.success) {
-        return response.data;
+        return response.data || [];
       } else {
         setError('Failed to fetch sub-categories');
         return [];
@@ -186,6 +227,7 @@ export function useFirebaseCategories() {
     try {
       setLoading(true);
       setError(null);
+      
       const result = await getCategoryWithSubCategoriesFunction({ categoryId });
       const response = result.data as any;
       
@@ -208,11 +250,12 @@ export function useFirebaseCategories() {
     try {
       setLoading(true);
       setError(null);
+      
       const result = await getAllCategoriesWithSubCategoriesFunction({});
       const response = result.data as any;
       
       if (response.success) {
-        setCategories(response.data);
+        setCategories(response.data || []);
       } else {
         setError('Failed to fetch categories with sub-categories');
       }
@@ -224,10 +267,6 @@ export function useFirebaseCategories() {
     }
   }, []);
 
-  useEffect(() => {
-    fetchCategories();
-  }, [fetchCategories]);
-
   return {
     categories,
     loading,
@@ -237,6 +276,59 @@ export function useFirebaseCategories() {
     fetchSubCategories,
     fetchCategoryWithSubCategories,
     fetchAllCategoriesWithSubCategories
+  };
+}
+
+// Main page hook - only fetches categories, no products
+// This hook should ONLY be used on the home page (/)
+// For other pages that need both products and categories, use useFirebaseProducts and useFirebaseCategories separately
+export function useFirebaseMainPage() {
+  const [categories, setCategories] = useState<CategoryData[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [hasFetched, setHasFetched] = useState(false);
+
+  const fetchCategories = useCallback(async () => {
+    if (hasFetched) {
+      console.log('🔄 Main page: Categories already fetched, skipping...');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      setError(null);
+      setHasFetched(true);
+      
+      console.log('🔄 Main page: Fetching categories from Firebase...');
+      const result = await getCategoriesFunction({});
+      const response = result.data as any;
+      
+      if (response.success) {
+        console.log(`✅ Main page: Successfully fetched ${response.data?.length || 0} categories`);
+        setCategories(response.data || []);
+      } else {
+        console.error('❌ Main page: Failed to fetch categories:', response);
+        setError('Failed to fetch categories from server');
+      }
+    } catch (err) {
+      console.error('Main page: Error fetching categories:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch categories';
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  }, [hasFetched]);
+
+  // Auto-fetch categories on mount
+  useEffect(() => {
+    console.log('🔄 useFirebaseMainPage: Auto-fetching categories on mount');
+    fetchCategories();
+  }, [fetchCategories]);
+
+  return {
+    categories,
+    loading,
+    error
   };
 }
 
@@ -252,6 +344,7 @@ export function useFirebaseProduct(productId: string) {
     try {
       setLoading(true);
       setError(null);
+      
       const result = await getProductByIdFunction({ productId });
       const response = result.data as any;
       

@@ -4,19 +4,138 @@ import { Button } from "@/components/ui/button";
 import { fadeInUp, staggerContainer } from "@/lib/animations";
 import { ProductCategory } from "@/types/products";
 import { getImageUrl } from "@/lib/image-utils";
-import { useFirebaseCategories } from "@/hooks/useFirebaseData";
+import { useFirebaseMainPage } from "@/hooks/useFirebaseData";
+import { useEffect } from "react";
 
+// ProductsSection component - used on the main page to display product categories
+// Uses useFirebaseMainPage hook which only fetches categories, not products
 export default function ProductsSection() {
-  const { categories, loading: categoriesLoading } = useFirebaseCategories();
+  const { categories, loading: categoriesLoading, error: categoriesError } = useFirebaseMainPage();
+
+  // Add comprehensive debugging
+  console.log('🔄 ProductsSection (Main Page): categories count:', categories.length, 'loading:', categoriesLoading, 'error:', categoriesError);
+
+  // Add component mount debugging
+  useEffect(() => {
+    console.log('🔄 ProductsSection (Main Page): Component mounted');
+    return () => {
+      console.log('🔄 ProductsSection (Main Page): Component unmounted');
+    };
+  }, []);
+
+  // Add debugging for categories data
+  useEffect(() => {
+    console.log('🔄 ProductsSection (Main Page): Categories updated - count:', categories.length);
+    if (categories.length > 0) {
+      console.log('🔄 ProductsSection (Main Page): First category:', categories[0]);
+      console.log('🔄 ProductsSection (Main Page): First category keys:', Object.keys(categories[0]));
+      console.log('🔄 ProductsSection (Main Page): First category categoryId:', categories[0].categoryId);
+      console.log('🔄 ProductsSection (Main Page): First category name:', categories[0].name);
+    }
+  }, [categories]);
 
   // Use categories from Firebase instead of hardcoded data
-  const allCategories = categories.map(cat => ({
-    category: cat.categoryId,
-    title: cat.name,
-    featuredSubCategories: cat.featuredSubCategories || [],
-    image: cat.image || '/images/placeholder-category.jpg',
-    popular: cat.popular || false
-  }));
+  const allCategories = categories.map(cat => {
+    console.log('🔄 Processing category:', cat);
+    return {
+      category: cat.categoryId || cat.id || 'UNKNOWN', // Fallback to id if categoryId doesn't exist
+      title: cat.name || 'Unknown Category',
+      featuredSubCategories: cat.featuredSubCategories || [],
+      image: cat.image || '/images/placeholder-category.jpg',
+      popular: cat.popular || false
+    };
+  });
+
+  console.log('🔄 ProductsSection (Main Page): allCategories count:', allCategories.length);
+  console.log('🔄 ProductsSection (Main Page): allCategories data:', allCategories);
+  console.log('🔄 ProductsSection (Main Page): categoriesLoading:', categoriesLoading);
+  console.log('🔄 ProductsSection (Main Page): categoriesError:', categoriesError);
+
+  // Show loading state if categories are still loading
+  if (categoriesLoading) {
+    return (
+      <section className="py-20 bg-gray-50">
+        <div className="container mx-auto px-4">
+          {/* Header */}
+          <motion.div 
+            className="text-center mb-16"
+            initial="initial"
+            whileInView="animate"
+            viewport={{ once: true }}
+            variants={fadeInUp}
+          >
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+              Our Product Categories
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Discover our comprehensive range of professional signage solutions, 
+              from custom banners to illuminated signs and everything in between.
+            </p>
+          </motion.div>
+
+          {/* Loading skeleton */}
+          <motion.div 
+            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 mb-20"
+            initial="initial"
+            whileInView="animate"
+            viewport={{ once: true }}
+            variants={staggerContainer}
+          >
+            {Array.from({ length: 10 }).map((_, index) => (
+              <motion.div 
+                key={`skeleton-${index}`}
+                className="bg-white rounded-xl overflow-hidden shadow-md border border-gray-100 h-full"
+                variants={fadeInUp}
+              >
+                <div className="animate-pulse">
+                  <div className="h-32 bg-gray-200"></div>
+                  <div className="p-4">
+                    <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                    <div className="h-3 bg-gray-200 rounded mb-1"></div>
+                    <div className="h-3 bg-gray-200 rounded mb-1"></div>
+                    <div className="h-3 bg-gray-200 rounded mb-4"></div>
+                    <div className="h-8 bg-gray-200 rounded"></div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+    );
+  }
+
+  // Show error state if there's an error
+  if (categoriesError) {
+    return (
+      <section className="py-20 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="text-center">
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+              <p className="font-bold">Error loading categories</p>
+              <p>{categoriesError}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Show empty state if no categories loaded
+  if (!categoriesLoading && categories.length === 0) {
+    return (
+      <section className="py-20 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="text-center">
+            <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
+              <p className="font-bold">No categories found</p>
+              <p>Categories array is empty after loading completed.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-20 bg-gray-50">
@@ -46,26 +165,10 @@ export default function ProductsSection() {
           viewport={{ once: true }}
           variants={staggerContainer}
         >
-          {categoriesLoading ? (
-            // Loading skeleton
-            Array.from({ length: 10 }).map((_, index) => (
-              <motion.div 
-                key={`skeleton-${index}`}
-                className="bg-white rounded-xl overflow-hidden shadow-md border border-gray-100 h-full"
-                variants={fadeInUp}
-              >
-                <div className="animate-pulse">
-                  <div className="h-32 bg-gray-200"></div>
-                  <div className="p-4">
-                    <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                    <div className="h-3 bg-gray-200 rounded mb-1"></div>
-                    <div className="h-3 bg-gray-200 rounded mb-1"></div>
-                    <div className="h-3 bg-gray-200 rounded mb-4"></div>
-                    <div className="h-8 bg-gray-200 rounded"></div>
-                  </div>
-                </div>
-              </motion.div>
-            ))
+          {allCategories.length === 0 ? (
+            <div className="col-span-full text-center py-8">
+              <p className="text-gray-500">No categories available</p>
+            </div>
           ) : (
             allCategories.map((category, index) => (
             <motion.div 
@@ -96,7 +199,7 @@ export default function ProductsSection() {
                     {category.title}
                   </h3>
                   <div className="text-sm text-gray-600 mb-4 flex-1">
-                    {category.featuredSubCategories.map((sub, idx) => (
+                    {category.featuredSubCategories.map((sub: string, idx: number) => (
                       <div key={idx} className="flex items-center text-xs mb-1">
                         <ChevronRight className="h-3 w-3 text-blue-500 mr-1" />
                         {sub}
@@ -116,10 +219,9 @@ export default function ProductsSection() {
                 </div>
               </div>
             </motion.div>
-          )))}
+          ))
+          )}
         </motion.div>
-
-
 
         {/* CTA Section */}
         <motion.div 

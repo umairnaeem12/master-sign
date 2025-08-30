@@ -20,7 +20,7 @@ export interface Product {
   id: string;
   name: string;
   category: ProductCategory;
-  subCategory: string;
+  subcategory: string;
   description: string;
   longDescription: string;
   price: number;
@@ -214,14 +214,18 @@ export interface ProductReview {
 
 // Category Data interfaces
 export interface CategoryData {
-  id: ProductCategory;
+  id: string;
+  categoryId: string;
   name: string;
   description: string;
   icon: string;
   image: string;
-  featured: boolean;
-  productCount: number;
-  subCategories: SubCategoryData[];
+  featuredSubCategories: string[]; // Add this field
+  popular: boolean; // Add this field
+  isActive: boolean;
+  sortOrder: number;
+  createdAt: any;
+  updatedAt: any;
 }
 
 export interface SubCategoryData {

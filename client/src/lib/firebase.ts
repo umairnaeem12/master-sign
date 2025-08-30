@@ -20,8 +20,29 @@ const functions = getFunctions(app);
 
 // Connect to local emulator in development
 if (import.meta.env.DEV) {
-  connectFunctionsEmulator(functions, '127.0.0.1', 5001);
+  try {
+    console.log('🔧 Connecting to Firebase emulator...');
+    connectFunctionsEmulator(functions, '127.0.0.1', 5001);
+    console.log('✅ Connected to Firebase emulator');
+  } catch (error) {
+    console.warn('⚠️ Failed to connect to Firebase emulator:', error);
+    console.log('ℹ️ Using production Firebase functions');
+  }
 }
+
+// Test Firebase connection
+export const testFirebaseConnection = async () => {
+  try {
+    console.log('🧪 Testing Firebase connection...');
+    const testFunction = httpsCallable(functions, 'getProductsFunction');
+    const result = await testFunction({});
+    console.log('✅ Firebase connection successful');
+    return true;
+  } catch (error) {
+    console.error('❌ Firebase connection failed:', error);
+    return false;
+  }
+};
 
 // Product Functions
 export const getProductsFunction = httpsCallable(functions, 'getProductsFunction');

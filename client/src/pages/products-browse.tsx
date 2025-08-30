@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
 import { motion } from "framer-motion";
-import { Star, ShoppingCart, Eye } from "lucide-react";
+import { Star, ShoppingCart, Eye, RefreshCw } from "lucide-react";
 import { useFirebaseProducts, useFirebaseCategories } from "@/hooks/useFirebaseData";
 
 // Category fallback images mapping
@@ -136,6 +136,64 @@ function slugify(input: string) {
   return input.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 }
 
+// Function to get Firebase Storage image URL
+function getFirebaseStorageImage(product: Product, categoryId: string): string {
+  console.log(`🖼️ Getting image for product: ${product.name}, category: ${categoryId}`);
+  console.log(`🖼️ Product images:`, product.images);
+  
+  // If product has images, use the first one
+  if (product.images && product.images.length > 0) {
+    console.log(`🖼️ Using product image: ${product.images[0]}`);
+    return product.images[0];
+  }
+  
+  // Map Firebase category IDs to Firebase Storage paths using your URL structure
+  const categoryImageMap: Record<string, string> = {
+    // Accessories
+    '6PREr3ZFACWbId0sb9vM': 'https://firebasestorage.googleapis.com/v0/b/mastersign-d8396.firebasestorage.app/o/Master%2520Sign%2Fassets%2FAccessories%2Fcategory-accessories.jpg?alt=media',
+    
+    // Expo & Display
+    'EXPO_DISPLAY': 'https://firebasestorage.googleapis.com/v0/b/mastersign-d8396.firebasestorage.app/o/Master%2520Sign%2Fassets%2FTradeshows-Expos%2Fpopup1.jpg?alt=media',
+    
+    // Laser Engraving
+    'LASER_ENGRAVING': 'https://firebasestorage.googleapis.com/v0/b/mastersign-d8396.firebasestorage.app/o/Master%2520Sign%2Fassets%2FLaser%2520Engraving%2Ffish.jpg?alt=media',
+    
+    // Decals & Stickers
+    'DECALS_STICKERS': 'https://firebasestorage.googleapis.com/v0/b/mastersign-d8396.firebasestorage.app/o/Master%2520Sign%2Fassets%2FBanners%2FMAIN%2520-%2520Banner.jpg?alt=media',
+    
+    // Banners & Flags
+    'BANNERS_FLAGS': 'https://firebasestorage.googleapis.com/v0/b/mastersign-d8396.firebasestorage.app/o/Master%2520Sign%2Fassets%2FBanners%2FMAIN%2520-%2520Banner.jpg?alt=media',
+    
+    // Signs
+    'SIGNS': 'https://firebasestorage.googleapis.com/v0/b/mastersign-d8396.firebasestorage.app/o/Master%2520Sign%2Fassets%2FBusiness%2520Signage%2FPerformance.jpg?alt=media',
+    
+    // Privacy & Security
+    'PRIVACY_SECURITY': 'https://firebasestorage.googleapis.com/v0/b/mastersign-d8396.firebasestorage.app/o/Master%2520Sign%2Fassets%2FIndoor-Outdoor%2520Displays%2FIMG_20230621_000909.jpg?alt=media',
+    
+    // Marketing
+    'MARKETING': 'https://firebasestorage.googleapis.com/v0/b/mastersign-d8396.firebasestorage.app/o/Master%2520Sign%2Fassets%2FBusiness%2520Signage%2FDancology.jpg?alt=media',
+    
+    // Promotional
+    'PROMO': 'https://firebasestorage.googleapis.com/v0/b/mastersign-d8396.firebasestorage.app/o/Master%2520Sign%2Fassets%2FBanners%2FMAIN%2520-%2520Banner.jpg?alt=media',
+    
+    // Electric Signs
+    'ELECTRIC_SIGNS': 'https://firebasestorage.googleapis.com/v0/b/mastersign-d8396.firebasestorage.app/o/Master%2520Sign%2Fassets%2FChannel%2520Letters%2F20241112_194813.jpg?alt=media',
+    
+    // Vehicle & Trailer
+    'VEHICLE_TRAILER': 'https://firebasestorage.googleapis.com/v0/b/mastersign-d8396.firebasestorage.app/o/Master%2520Sign%2Fassets%2FVehicle%2520Graphics%2F20240309_133150.jpg?alt=media',
+    
+    // Indoor Signs
+    'INDOOR_SIGNS': 'https://firebasestorage.googleapis.com/v0/b/mastersign-d8396.firebasestorage.app/o/Master%2520Sign%2Fassets%2FOffice%2520Signage%2F20230120_165654.jpg?alt=media',
+    
+    // Outdoor Signs
+    'OUTDOOR_SIGNS': 'https://firebasestorage.googleapis.com/v0/b/mastersign-d8396.firebasestorage.app/o/Master%2520Sign%2Fassets%2FIndoor-Outdoor%2520Displays%2FExterior%2520Sign.jpg?alt=media',
+  };
+  
+  const fallbackImage = categoryImageMap[categoryId] || 'https://via.placeholder.com/400x300/f3f4f6/6b7280?text=No+Image';
+  console.log(`🖼️ Using fallback image: ${fallbackImage}`);
+  return fallbackImage;
+}
+
 export default function ProductsBrowsePage() {
   const params = new URLSearchParams(window.location.search);
   const [selectedCategory, setSelectedCategory] = useState<ProductCategory>(
@@ -143,58 +201,79 @@ export default function ProductsBrowsePage() {
   );
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSubCategory, setSelectedSubCategory] = useState<string>('');
+  const [retryCount, setRetryCount] = useState(0);
+  const [lastFetchTime, setLastFetchTime] = useState<number>(0);
 
   // Fetch products and categories from Firebase
   const { products, loading, error, fetchProducts } = useFirebaseProducts();
-  const { categories: firebaseCategories, loading: categoriesLoading } = useFirebaseCategories();
+  console.log('🔄 Hook destructured - fetchProducts:', typeof fetchProducts, 'loading:', loading, 'products count:', products.length, 'error:', error);
+  const { categories: firebaseCategories, loading: categoriesLoading, error: categoriesError } = useFirebaseCategories();
 
+  // Add component mount debugging
   useEffect(() => {
-    // Fetch all products from Firebase (we'll filter client-side)
-    console.log('🔄 Fetching all products from Firebase');
-    fetchProducts();
-  }, [fetchProducts]);
+    console.log('🔄 ProductsBrowsePage: Component mounted');
+    return () => {
+      console.log('🔄 ProductsBrowsePage: Component unmounted');
+    };
+  }, []);
+
+  // Add this useEffect for categories if it's not already there
+  useEffect(() => {
+    // Categories are automatically fetched by the hook
+    console.log('🔄 Categories hook is active, categories count:', firebaseCategories.length);
+  }, [firebaseCategories.length]);
 
   const subCategories = PRODUCT_SUBCATEGORIES[selectedCategory] || [];
 
   const items: Product[] = useMemo(() => {
-    if (loading) return [];
-    if (error) return [];
-
-    console.log(`🔄 Using ${products.length} Firebase products`);
-    console.log('📊 Product categories found:', [...new Set(products.map(p => p.category))]);
-
-    // Filter products by selected category
-    let filteredProducts = products;
+    console.log('🔄 items useMemo triggered');
+    console.log('🔄 loading:', loading, 'error:', error, 'products count:', products.length);
+    console.log('🔄 categoriesLoading:', categoriesLoading, 'firebaseCategories count:', firebaseCategories.length);
     
-    if (selectedCategory && firebaseCategories.length > 0) {
-      // Create dynamic mapping from Firebase categories
-      const categoryMapping: Record<string, string> = {};
-      firebaseCategories.forEach(cat => {
-        if (cat.categoryId) {
-          categoryMapping[cat.categoryId] = cat.id; // Map categoryId to Firebase document ID
-        }
-      });
-      
-      console.log('🗂️ Category mapping:', categoryMapping);
-      console.log('🎯 Selected category:', selectedCategory);
-      
-      // Find the Firebase document ID for the selected category
-      const targetCategoryId = categoryMapping[selectedCategory];
-      
-      if (targetCategoryId) {
-        console.log(`🎯 Filtering for category: ${selectedCategory} -> Firebase ID: ${targetCategoryId}`);
-        console.log(`📊 Available product categories:`, [...new Set(products.map(p => p.category))]);
-        
-        filteredProducts = products.filter(p => p.category === targetCategoryId);
-        console.log(`✅ Found ${filteredProducts.length} products for category ${selectedCategory}`);
-      } else {
-        console.warn(`⚠️ No Firebase category found for: ${selectedCategory}`);
-        console.log('Available category mappings:', Object.keys(categoryMapping));
-      }
+    // Only wait for products to load, not categories
+    if (loading) {
+      console.log('🔄 Still loading products...');
+      return [];
+    }
+    
+    if (error) {
+      console.log('🔄 Error loading products:', error);
+      return [];
     }
 
-    return filteredProducts;
-  }, [products, loading, error, selectedCategory]);
+    // If we have products, show them immediately
+    if (products.length > 0) {
+      console.log(`🔄 Using ${products.length} Firebase products`);
+      console.log('📊 Product categories found:', [...new Set(products.map(p => p.category))]);
+
+      // Filter products by selected category if categories are available
+      let filteredProducts = products;
+      
+      if (selectedCategory && firebaseCategories.length > 0 && !categoriesLoading) {
+        // Products have category field set to categoryId (enum value), not Firebase document ID
+        // So we can filter directly by selectedCategory
+        console.log(`🎯 Filtering for category: ${selectedCategory}`);
+        console.log(`📊 Available product categories:`, [...new Set(products.map(p => p.category))]);
+        
+        filteredProducts = products.filter(p => p.category === selectedCategory);
+        console.log(`✅ Found ${filteredProducts.length} products for category ${selectedCategory}`);
+      } else {
+        console.log('⚠️ No categories loaded yet, showing all products');
+        filteredProducts = products;
+      }
+
+      // Remove duplicates
+      const uniqueProducts = filteredProducts.filter((product, index, self) => 
+        index === self.findIndex(p => p.id === product.id)
+      );
+
+      console.log(`🔍 Final products count: ${uniqueProducts.length}`);
+      return uniqueProducts;
+    }
+
+    console.log('⚠️ No products loaded yet');
+    return [];
+  }, [products, loading, error, selectedCategory, firebaseCategories, categoriesLoading]);
 
   const filtered = useMemo(() => {
     let filteredItems = items;
@@ -225,14 +304,27 @@ export default function ProductsBrowsePage() {
     setSearchTerm('');
   };
 
-  if (loading) {
+  const handleRetry = () => {
+    console.log('🔄 Manual retry triggered');
+    setRetryCount(0);
+    setLastFetchTime(0);
+    fetchProducts();
+  };
+
+  // Show loading state
+  if (loading || categoriesLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Navigation />
         <div className="container mx-auto px-4 py-8">
           <div className="text-center">
             <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-lg text-gray-600">Loading products...</p>
+            <p className="mt-4 text-lg text-gray-600">
+              {loading ? 'Loading products...' : 'Loading categories...'}
+            </p>
+            <p className="text-sm text-gray-500 mt-2">
+              Last fetch: {lastFetchTime ? new Date(lastFetchTime).toLocaleTimeString() : 'Never'}
+            </p>
           </div>
         </div>
         <Footer />
@@ -240,15 +332,28 @@ export default function ProductsBrowsePage() {
     );
   }
 
-  if (error) {
+  // Show error state with retry option
+  if (error || categoriesError) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Navigation />
         <div className="container mx-auto px-4 py-8">
           <div className="text-center">
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-              <p className="font-bold">Error loading products</p>
-              <p>{error}</p>
+            <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg max-w-md mx-auto">
+              <p className="font-bold mb-2">Error loading data</p>
+              <p className="text-sm mb-4">{error || categoriesError}</p>
+              <div className="flex flex-col gap-2">
+                <button 
+                  onClick={handleRetry}
+                  className="flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  Retry Loading
+                </button>
+                <p className="text-xs text-red-600">
+                  Retry attempts: {retryCount}/3
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -288,6 +393,16 @@ export default function ProductsBrowsePage() {
       </div>
 
       <div className="container mx-auto px-4 py-8">
+        {/* Debug Info */}
+        <div className="mb-4 p-4 bg-gray-100 rounded-lg text-sm">
+          <p><strong>Debug Info:</strong></p>
+          <p>Products loaded: {products.length}</p>
+          <p>Categories loaded: {firebaseCategories.length}</p>
+          <p>Selected category: {selectedCategory}</p>
+          <p>Filtered products: {filtered.length}</p>
+          <p>Last fetch: {lastFetchTime ? new Date(lastFetchTime).toLocaleTimeString() : 'Never'}</p>
+        </div>
+
         {/* Category Selection */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold mb-4">Select Category</h2>
@@ -358,17 +473,9 @@ export default function ProductsBrowsePage() {
                 <Card className="h-full overflow-hidden hover:shadow-lg transition-all duration-300">
                   <div className="relative overflow-hidden">
                     <img 
-                      src={product.images && product.images.length > 0 ? product.images[0] : '/images/placeholder-product.jpg'} 
+                      src={getFirebaseStorageImage(product, product.category)} 
                       alt={product.name}
                       className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                      onError={(e) => {
-                        // Fallback to placeholder if product image fails
-                        const target = e.target as HTMLImageElement;
-                        console.log(`🖼️ Image failed to load, using placeholder for: ${product.name}`);
-                        target.src = '/images/placeholder-product.jpg';
-                        // Prevent infinite error loop
-                        target.onerror = null;
-                      }}
                     />
                     <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300"></div>
                   </div>
@@ -416,9 +523,16 @@ export default function ProductsBrowsePage() {
           <div className="text-center py-12">
             <div className="text-gray-400 text-6xl mb-4">🔍</div>
             <h3 className="text-xl font-semibold text-gray-600 mb-2">No products found</h3>
-            <p className="text-gray-500">
+            <p className="text-gray-500 mb-4">
               Try adjusting your search terms or category selection.
             </p>
+            <button 
+              onClick={handleRetry}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors mx-auto"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Refresh Products
+            </button>
           </div>
         )}
       </div>
