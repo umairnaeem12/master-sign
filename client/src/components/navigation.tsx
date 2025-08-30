@@ -157,16 +157,25 @@ export default function Navigation() {
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, delay: 0.2 }}
       >
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex justify-between items-center py-4">
-            {/* Logo */}
-            <motion.div 
-              className="flex items-center cursor-pointer"
-              {...fadeInUp}
-              onClick={() => window.location.href = '/'}
-            >
-              <img src={getImageUrl("app-logo-sub.png")} alt="Master Signs" className="w-28 h-16 rounded-xl object-contain" />
-            </motion.div>
+                 <div className="max-w-7xl mx-auto px-4">
+           <div className="flex justify-between items-center py-3">
+             {/* Logo */}
+             <motion.div 
+               className="flex items-center cursor-pointer"
+               {...fadeInUp}
+               onClick={() => window.location.href = '/'}
+             >
+               <img 
+                 src="/1.png" 
+                 alt="Master Signs" 
+                 className="w-72 h-16 rounded-lg object-contain"
+                 onError={(e) => {
+                   console.error('Logo failed to load:', e);
+                   e.currentTarget.style.display = 'none';
+                 }}
+                 onLoad={() => console.log('Logo loaded successfully')}
+               />
+             </motion.div>
 
             {/* Search Bar */}
             <div className="hidden lg:flex items-center flex-1 max-w-md mx-8">

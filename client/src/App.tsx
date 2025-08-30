@@ -21,6 +21,9 @@ import ProductsBrowsePage from "@/pages/products-browse";
 // import { SignEditor } from "../../components/design-editor";
 import DebugCategoriesPage from "@/pages/debug-categories";
 import EnhancedEditorDemo from "../../pages/enhanced-editor-demo";
+import { LoadingProvider, useLoading } from "@/contexts/LoadingContext";
+import LoadingScreen from "@/components/LoadingScreen";
+import { usePageTransition } from "@/hooks/usePageTransition";
 
 function Router() {
   return (
@@ -48,13 +51,27 @@ function Router() {
   );
 }
 
+function AppContent() {
+  const { isLoading } = useLoading();
+  usePageTransition(); // Handle page transitions
+
+  return (
+    <>
+      <LoadingScreen isLoading={isLoading} />
+      <Router />
+    </>
+  );
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Router />
-      </TooltipProvider>
+      <LoadingProvider>
+        <TooltipProvider>
+          <Toaster />
+          <AppContent />
+        </TooltipProvider>
+      </LoadingProvider>
     </QueryClientProvider>
   );
 }

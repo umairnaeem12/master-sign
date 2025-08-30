@@ -49,7 +49,7 @@ export default function Footer() {
           {/* Company Info */}
           <motion.div className="lg:col-span-2" variants={fadeInUp}>
             <div className="flex items-center space-x-3 mb-6 cursor-pointer" onClick={() => window.location.href = '/'}>
-              <img src="/src/assets/app-logo-sub.png" alt="Master Signs" className="w-24 h-12 rounded-xl object-contain" />
+              <img src="2.png" alt="Master Signs" className="w-40 h-13 rounded-xl object-contain" />
               <div>
                 <h3 className="text-2xl font-bold">Master Signs</h3>
                 <p className="text-gray-400">Faith-Driven Excellence</p>
