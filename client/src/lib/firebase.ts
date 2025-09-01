@@ -1,6 +1,8 @@
 // Firebase configuration for SignFlow Frontend
 import { initializeApp } from 'firebase/app';
 import { getFunctions, httpsCallable, connectFunctionsEmulator } from 'firebase/functions';
+import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
 
 // Firebase configuration
 const firebaseConfig = {
@@ -15,19 +17,24 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// Initialize Firebase Functions
+// Initialize Firebase services
 const functions = getFunctions(app);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-// Connect to local emulator in development
+// Hybrid setup: Local functions + Production Firestore
 if (import.meta.env.DEV) {
   try {
-    console.log('🔧 Connecting to Firebase emulator...');
+    console.log('🔧 Connecting to LOCAL Firebase emulator for functions...');
     connectFunctionsEmulator(functions, '127.0.0.1', 5001);
-    console.log('✅ Connected to Firebase emulator');
+    console.log('✅ Connected to LOCAL functions emulator');
+    console.log('🌐 Using PRODUCTION Firestore database');
   } catch (error) {
-    console.warn('⚠️ Failed to connect to Firebase emulator:', error);
-    console.log('ℹ️ Using production Firebase functions');
+    console.warn('⚠️ Failed to connect to local emulator:', error);
+    console.log('ℹ️ Falling back to production Firebase functions');
   }
+} else {
+  console.log('🚀 Using production Firebase functions and Firestore');
 }
 
 // Test Firebase connection
@@ -65,4 +72,4 @@ export const calculateTurnaroundFunction = httpsCallable(functions, 'calculateTu
 // Order Functions
 export const processOrderFunction = httpsCallable(functions, 'processOrderFunction');
 
-export { app, functions };
+export { app, functions, auth, db };

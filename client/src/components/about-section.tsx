@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Users, Handshake, Brain, Users2, Shield } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { fadeInUp, slideInLeft, slideInRight, staggerContainer } from "@/lib/animations";
+import { ExternalNavigationButton } from "@/components/ExternalNavigationButton";
 
 export default function AboutSection() {
   const values = [
@@ -87,15 +88,13 @@ export default function AboutSection() {
             
             {/* Start Designing Button */}
             <motion.div className="mt-8" variants={fadeInUp}>
-              <a 
-                href="https://animated-cheesecake-a81f47.netlify.app/"
-                target="_blank"
-                rel="noopener noreferrer"
+              <ExternalNavigationButton 
+                url="https://animated-cheesecake-a81f47.netlify.app/"
                 className="inline-flex items-center space-x-2 bg-[var(--master-blue)] text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-colors font-semibold"
               >
                 <span>🎨</span>
                 <span>Start Designing Your Sign</span>
-              </a>
+              </ExternalNavigationButton>
             </motion.div>
           </motion.div>
 

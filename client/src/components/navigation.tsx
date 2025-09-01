@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { fadeInUp, magneticHover } from "@/lib/animations";
 import { ProductCategory, PRODUCT_SUBCATEGORIES } from "@/types/products";
 import { getImageUrl } from "@/lib/image-utils";
+import logo1 from "@/assets/1.png";
+import { StartDesigningButton } from "@/components/ExternalNavigationButton";
 
 export default function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -165,16 +167,18 @@ export default function Navigation() {
                {...fadeInUp}
                onClick={() => window.location.href = '/'}
              >
-               <img 
-                 src="/1.png" 
-                 alt="Master Signs" 
-                 className="w-72 h-16 rounded-lg object-contain"
-                 onError={(e) => {
-                   console.error('Logo failed to load:', e);
-                   e.currentTarget.style.display = 'none';
-                 }}
-                 onLoad={() => console.log('Logo loaded successfully')}
-               />
+                               <img 
+                  src={logo1}
+                  alt="Master Signs" 
+                  className="w-72 h-16 rounded-lg object-contain"
+                  onError={(e) => {
+                    console.error('Logo failed to load:', e.nativeEvent);
+                    if (e.target) {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }
+                  }}
+                  onLoad={() => console.log('Logo loaded successfully')}
+                />
              </motion.div>
 
             {/* Search Bar */}
@@ -209,16 +213,9 @@ export default function Navigation() {
               </Button>
               
               <motion.div {...magneticHover}>
-                <Button 
-                  asChild
+                <StartDesigningButton 
                   className="btn-primary bg-blue-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-blue-700 transition-all duration-300"
-                  data-testid="button-start-designing"
-                >
-                  <a href="https://animated-cheesecake-a81f47.netlify.app/" target="_blank" rel="noopener noreferrer">
-                    <Palette className="mr-2 h-4 w-4" />
-                    START DESIGNING
-                  </a>
-                </Button>
+                />
               </motion.div>
               
               <button 
@@ -379,17 +376,11 @@ export default function Navigation() {
                 ))}
               </div>
               
-              <div className="pt-4 border-t border-gray-200">
-                <Button 
-                  asChild
-                  className="w-full bg-blue-600 text-white hover:bg-blue-700 font-semibold py-3 rounded-lg transition-colors"
-                >
-                  <a href="https://animated-cheesecake-a81f47.netlify.app/" target="_blank" rel="noopener noreferrer">
-                    <Palette className="mr-2 h-4 w-4" />
-                    START DESIGNING
-                  </a>
-                </Button>
-              </div>
+                             <div className="pt-4 border-t border-gray-200">
+                 <StartDesigningButton 
+                   className="w-full bg-blue-600 text-white hover:bg-blue-700 font-semibold py-3 rounded-lg transition-colors"
+                 />
+               </div>
             </div>
           </motion.div>
         )}

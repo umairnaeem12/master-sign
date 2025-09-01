@@ -11,6 +11,7 @@ import {
   getAllCategoriesWithSubCategoriesFunction
 } from '@/lib/firebase';
 import { ProductCategory, Product, CategoryData } from '@/types/products';
+import { assignImagesToProducts, analyzeProductCategories } from '@/lib/product-image-assigner';
 
 // Products hook
 export function useFirebaseProducts() {
@@ -36,7 +37,14 @@ export function useFirebaseProducts() {
       
       if (response.success) {
         console.log(`✅ Successfully fetched ${response.data?.length || 0} products`);
-        setProducts(response.data || []);
+        
+        // Analyze categories for debugging
+        analyzeProductCategories(response.data || []);
+        
+        // Assign images to products at runtime
+        const productsWithImages = assignImagesToProducts(response.data || []);
+        console.log(`🖼️ Assigned images to ${productsWithImages.length} products`);
+        setProducts(productsWithImages);
       } else {
         console.error('❌ Failed to fetch products:', response);
         setError('Failed to fetch products from server');
@@ -65,7 +73,10 @@ export function useFirebaseProducts() {
       const response = result.data as any;
       
       if (response.success) {
-        setProducts(response.data || []);
+        // Assign images to products at runtime
+        const productsWithImages = assignImagesToProducts(response.data || []);
+        console.log(`🖼️ Assigned images to ${productsWithImages.length} products by category`);
+        setProducts(productsWithImages);
       } else {
         setError('Failed to fetch products by category');
       }
@@ -86,7 +97,10 @@ export function useFirebaseProducts() {
       const response = result.data as any;
       
       if (response.success) {
-        return response.data;
+        // Assign images to the product at runtime
+        const productWithImages = assignImagesToProducts([response.data])[0];
+        console.log(`🖼️ Assigned images to product: ${productWithImages.name}`);
+        return productWithImages;
       } else {
         setError('Failed to fetch product');
         return null;
@@ -109,7 +123,10 @@ export function useFirebaseProducts() {
       const response = result.data as any;
       
       if (response.success) {
-        setProducts(response.data || []);
+        // Assign images to products at runtime
+        const productsWithImages = assignImagesToProducts(response.data || []);
+        console.log(`🖼️ Assigned images to ${productsWithImages.length} products from search`);
+        setProducts(productsWithImages);
       } else {
         setError('Failed to search products');
       }

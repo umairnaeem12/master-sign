@@ -17,7 +17,8 @@ import {
   Minus,
   Clock,
   Upload,
-  Zap
+  Zap,
+  Brush
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -87,129 +88,172 @@ export default function ProductDetailComponent({ product }: ProductDetailProps) 
   const [turnaroundInfo, setTurnaroundInfo] = useState<TurnaroundInfo | null>(null);
   const [loading, setLoading] = useState(false);
   const [artworkFile, setArtworkFile] = useState<File | null>(null);
-  const [firebaseReady, setFirebaseReady] = useState(false);
-
-  // Initialize Firebase Functions only when Firebase is ready
-  useEffect(() => {
-    const initializeFirebase = async () => {
-      try {
-        // Check if Firebase is already initialized
-        const { getApp } = await import('firebase/app');
-        try {
-          getApp();
-          setFirebaseReady(true);
-        } catch {
-          // Firebase not initialized, try to initialize it
-          const { initializeApp } = await import('firebase/app');
-          const { getFunctions, httpsCallable } = await import('firebase/functions');
-          
-          // Import your Firebase config
-          const { firebaseConfig } = await import('@/lib/firebase');
-          
-          // Initialize Firebase
-          initializeApp(firebaseConfig);
-          setFirebaseReady(true);
-        }
-      } catch (error) {
-        console.warn('Firebase not available, using static pricing:', error);
-        setFirebaseReady(false);
-      }
-    };
-
-    initializeFirebase();
-  }, []);
 
   // Calculate dynamic pricing whenever relevant values change
   useEffect(() => {
-    if (product.id && firebaseReady) {
-      updateDynamicPricing();
+    if (product.id) {
+      calculateStaticPricing();
     }
-  }, [quantity, customSize, selectedOptions, rushRequested, product.id, firebaseReady]);
+  }, [quantity, customSize, selectedOptions, rushRequested, product.id]);
 
   // Calculate shipping when zip code or shipping method changes
   useEffect(() => {
-    if (zipCode && shippingMethod && product.id && firebaseReady) {
-      updateShippingCost();
+    if (zipCode && shippingMethod && product.id) {
+      calculateStaticShipping();
     }
-  }, [zipCode, shippingMethod, product.id, firebaseReady]);
+  }, [zipCode, shippingMethod, product.id]);
 
   // Calculate turnaround time when rush option changes
   useEffect(() => {
-    if (product.id && firebaseReady) {
-      updateTurnaroundTime();
+    if (product.id) {
+      calculateStaticTurnaround();
     }
-  }, [rushRequested, product.id, firebaseReady]);
+  }, [rushRequested, product.id]);
 
-  const updateDynamicPricing = async () => {
-    if (!firebaseReady) return;
-    
+  const calculateStaticPricing = () => {
+    console.log('💰 Using static pricing calculation (no API calls)');
     setLoading(true);
+    
     try {
-      const { getFunctions, httpsCallable } = await import('firebase/functions');
-      const functions = getFunctions();
-      const calculatePrice = httpsCallable(functions, 'calculatePrice');
-
-      const result = await calculatePrice({
-        productId: product.id,
-        quantity,
-        size: customSize,
-        letterCount,
-        options: selectedOptions,
-        rushRequested
-      });
-
-      if (result.data.success) {
-        setDynamicPricing(result.data);
+      // Static pricing calculation
+      const basePrice = product.pricing?.basePrice || 99.99;
+      const area = customSize.width * customSize.height;
+      const sizeMultiplier = area / 144; // Convert to square feet
+      
+      // Size price adjustment
+      const sizePrice = basePrice * sizeMultiplier * 0.1;
+      
+      // Options price
+      const optionsPrice = selectedOptions.reduce((total, option) => {
+        return total + (parseFloat(option.value) || 0);
+      }, 0);
+      
+      // Quantity discount (10% off for 5+ items, 15% off for 10+ items)
+      let quantityDiscount = 0;
+      if (quantity >= 10) {
+        quantityDiscount = basePrice * quantity * 0.15;
+      } else if (quantity >= 5) {
+        quantityDiscount = basePrice * quantity * 0.10;
       }
+      
+      // Rush fee (25% for rush orders)
+      const rushFee = rushRequested ? basePrice * quantity * 0.25 : 0;
+      
+      // Calculate totals
+      const subtotal = (basePrice + sizePrice + optionsPrice) * quantity;
+      const total = subtotal - quantityDiscount + rushFee;
+      
+      const pricing: DynamicPricing = {
+        basePrice,
+        sizePrice,
+        optionsPrice,
+        quantityDiscount,
+        rushFee,
+        subtotal,
+        total,
+        breakdown: {
+          base: basePrice * quantity,
+          size: sizePrice * quantity,
+          options: optionsPrice * quantity,
+          quantityDiscount,
+          rushFee,
+          subtotal,
+          total
+        }
+      };
+      
+      setDynamicPricing(pricing);
     } catch (error) {
-      console.error('Price calculation failed:', error);
-      // Fall back to static pricing
+      console.error('Static price calculation failed:', error);
       setDynamicPricing(null);
     } finally {
       setLoading(false);
     }
   };
 
-  const updateShippingCost = async () => {
-    if (!firebaseReady) return;
-    
+  const calculateStaticShipping = () => {
+    console.log('🚚 Using static shipping calculation (no API calls)');
     try {
-      const { getFunctions, httpsCallable } = await import('firebase/functions');
-      const functions = getFunctions();
-      const calculateShipping = httpsCallable(functions, 'calculateShipping');
-
-      const result = await calculateShipping({
-        productId: product.id,
-        zipCode,
-        shippingMethod
-      });
-
-      if (result.data.success) {
-        setShippingInfo(result.data);
+      // Static shipping calculation
+      let cost = 0;
+      let estimatedDays = 5;
+      let description = 'Standard Ground Shipping';
+      
+      if (shippingMethod === 'express') {
+        cost = 25.99;
+        estimatedDays = 2;
+        description = 'Express Shipping (2-3 business days)';
+      } else if (shippingMethod === 'overnight') {
+        cost = 45.99;
+        estimatedDays = 1;
+        description = 'Overnight Shipping (Next business day)';
+      } else {
+        // Standard shipping
+        cost = 12.99;
+        estimatedDays = 5;
+        description = 'Standard Ground Shipping (5-7 business days)';
       }
+      
+      // Add distance-based adjustment for zip code
+      if (zipCode) {
+        const zipNum = parseInt(zipCode.substring(0, 3));
+        if (zipNum > 500) {
+          cost += 5; // Additional cost for distant locations
+        }
+      }
+      
+      const shipping: ShippingInfo = {
+        cost,
+        estimatedDays,
+        method: shippingMethod,
+        description
+      };
+      
+      setShippingInfo(shipping);
     } catch (error) {
-      console.error('Shipping calculation failed:', error);
+      console.error('Static shipping calculation failed:', error);
     }
   };
 
-  const updateTurnaroundTime = async () => {
-    if (!firebaseReady) return;
-    
+  const calculateStaticTurnaround = () => {
+    console.log('⏰ Using static turnaround calculation (no API calls)');
     try {
-      const { getFunctions, httpsCallable } = await import('firebase/functions');
-      const functions = getFunctions();
-      const calculateTurnaround = httpsCallable(functions, 'calculateTurnaround');
-
-      const result = await calculateTurnaround({
-        productId: product.id,
-        rushRequested
-      });
-
-      if (result.data.success) {
-        setTurnaroundInfo(result.data);
-      }
+      // Static turnaround calculation
+      const today = new Date();
+      const standardDays = 7;
+      const rushDays = 3;
+      const rushAvailable = true;
+      const rushFeePercentage = 25;
+      
+      // Calculate delivery dates
+      const standardDelivery = new Date(today);
+      standardDelivery.setDate(today.getDate() + standardDays);
+      
+      const rushDelivery = new Date(today);
+      rushDelivery.setDate(today.getDate() + rushDays);
+      
+      const turnaround: TurnaroundInfo = {
+        standardDays,
+        rushDays,
+        rushAvailable,
+        rushFeePercentage,
+        estimatedDeliveryDate: standardDelivery.toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        }),
+        rushDeliveryDate: rushDelivery.toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        })
+      };
+      
+      setTurnaroundInfo(turnaround);
     } catch (error) {
-      console.error('Turnaround calculation failed:', error);
+      console.error('Static turnaround calculation failed:', error);
     }
   };
 
@@ -265,9 +309,9 @@ export default function ProductDetailComponent({ product }: ProductDetailProps) 
     }));
   };
 
-  // Get current price (dynamic or fallback to static)
+  // Get current price (using static calculations)
   const getCurrentPrice = () => {
-    if (dynamicPricing && firebaseReady) {
+    if (dynamicPricing) {
       return {
         original: dynamicPricing.basePrice,
         discounted: dynamicPricing.basePrice,
@@ -277,8 +321,8 @@ export default function ProductDetailComponent({ product }: ProductDetailProps) 
     }
     
     // Fallback to static pricing
-    const basePrice = product.pricing.basePrice;
-    const discount = product.pricing.discountPercentage || 0;
+    const basePrice = product.pricing?.basePrice || 99.99;
+    const discount = product.pricing?.discountPercentage || 0;
     const discountedPrice = basePrice * (1 - discount / 100);
     return {
       original: basePrice,
@@ -303,9 +347,9 @@ export default function ProductDetailComponent({ product }: ProductDetailProps) 
           <nav className="flex items-center space-x-2 text-sm text-gray-600">
             <a href="/" className="hover:text-blue-600">Home</a>
             <ChevronDown className="h-4 w-4 rotate-[-90deg]" />
-            <a href={`/products/${product.category.toLowerCase().replace(/\s+/g, '-')}`} className="hover:text-blue-600">
-              {product.category}
-            </a>
+                         <a href={`/products/${(product.category || 'Unknown').toLowerCase().replace(/\s+/g, '-')}`} className="hover:text-blue-600">
+               {product.category || 'Unknown Category'}
+             </a>
             <ChevronDown className="h-4 w-4 rotate-[-90deg]" />
             <span className="text-gray-900 font-medium">{product.name}</span>
           </nav>
@@ -323,9 +367,16 @@ export default function ProductDetailComponent({ product }: ProductDetailProps) 
             <div className="relative bg-white rounded-xl overflow-hidden shadow-lg mb-6">
               <img 
                 key={selectedImageIndex}
-                src={product.images[selectedImageIndex]?.url}
-                alt={product.images[selectedImageIndex]?.alt || product.name}
+                src={product.images?.[selectedImageIndex]?.url || ''}
+                alt={product.images?.[selectedImageIndex]?.alt || product.name}
                 className="w-full h-96 object-cover"
+                onError={(e) => {
+                  // If image fails to load, try the next image
+                  const nextIndex = (selectedImageIndex + 1) % (product.images?.length || 1);
+                  if (nextIndex !== selectedImageIndex && product.images?.[nextIndex]?.url) {
+                    setSelectedImageIndex(nextIndex);
+                  }
+                }}
               />
               <div className="absolute top-4 right-4 flex space-x-2">
                 <Button
@@ -345,11 +396,11 @@ export default function ProductDetailComponent({ product }: ProductDetailProps) 
               </div>
             </div>
 
-            {/* Image Thumbnails */}
-            <div className="flex space-x-4 overflow-x-auto pb-4">
-              {product.images.map((image, index) => (
+                         {/* Image Thumbnails */}
+             <div className="flex space-x-4 overflow-x-auto pb-4">
+               {(product.images || []).map((image, index) => (
                 <button
-                  key={image.id}
+                  key={image.id || `image-${index}`}
                   onClick={() => handleImageChange(index)}
                   className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
                     index === selectedImageIndex 
@@ -372,24 +423,24 @@ export default function ProductDetailComponent({ product }: ProductDetailProps) 
               variants={fadeInUp}
             >
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Product Description</h3>
-              <div className="prose prose-sm text-gray-600">
-                <p className="leading-relaxed">{product.longDescription}</p>
-              </div>
+                             <div className="prose prose-sm text-gray-600">
+                 <p className="leading-relaxed">{product.longDescription || product.description || 'No description available.'}</p>
+               </div>
             </motion.div>
           </motion.div>
 
           {/* Right Side - Product Details */}
           <motion.div variants={fadeInUp}>
-            <div className="bg-white rounded-xl p-8 shadow-lg">
+            <div className="bg-white rounded-xl p-6 shadow-lg">
               {/* Product Title & Rating */}
-              <div className="mb-6">
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">{product.name}</h1>
-                <div className="flex items-center space-x-4 mb-4">
+              <div className="mb-4">
+                <h1 className="text-2xl font-bold text-gray-900 mb-2">{product.name}</h1>
+                <div className="flex items-center space-x-4 mb-3">
                   <div className="flex items-center">
                     {[...Array(5)].map((_, i) => (
                       <Star 
                         key={i}
-                        className={`h-5 w-5 ${
+                        className={`h-4 w-4 ${
                           i < Math.floor(product.rating) 
                             ? 'text-yellow-400 fill-current' 
                             : 'text-gray-300'
@@ -400,19 +451,15 @@ export default function ProductDetailComponent({ product }: ProductDetailProps) 
                       {product.rating} ({product.reviewCount} reviews)
                     </span>
                   </div>
-                  <button className="text-sm text-blue-600 hover:text-blue-700 flex items-center">
-                    <MessageCircle className="h-4 w-4 mr-1" />
-                    Questions & Answers ({product.questionCount})
-                  </button>
                 </div>
               </div>
 
-              {/* Key Features */}
-              <div className="mb-6">
-                <div className="flex items-center space-x-6 text-sm text-gray-600">
-                  {product.features.map((feature, index) => (
-                    <div key={index} className="flex items-center">
-                      <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                             {/* Key Features */}
+               <div className="mb-4">
+                 <div className="flex flex-wrap gap-2 text-sm text-gray-600">
+                   {(product.features || []).slice(0, 3).map((feature, index) => (
+                    <div key={index} className="flex items-center bg-gray-100 px-2 py-1 rounded">
+                      <div className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></div>
                       {feature}
                     </div>
                   ))}
@@ -421,8 +468,8 @@ export default function ProductDetailComponent({ product }: ProductDetailProps) 
 
               {/* Custom Size Selection */}
               {product.sizeConstraints?.allowCustomSize && (
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Custom Size</h3>
+                <div className="mb-4">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Size</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Width</label>
@@ -469,10 +516,10 @@ export default function ProductDetailComponent({ product }: ProductDetailProps) 
                 </div>
               )}
 
-              {/* Customizable Options */}
-              {product.customizableOptions && product.customizableOptions.length > 0 && (
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Customization Options</h3>
+               {/* Customizable Options */}
+               {product.customizableOptions && product.customizableOptions.length > 0 ? (
+                <div className="mb-4">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Options</h3>
                   <div className="space-y-3">
                     {product.customizableOptions.map((option) => (
                       <div key={option.id} className="border border-gray-200 rounded-lg p-4">
@@ -495,13 +542,13 @@ export default function ProductDetailComponent({ product }: ProductDetailProps) 
                     ))}
                   </div>
                 </div>
-              )}
+               ) : null}
 
               {/* Specifications */}
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Specifications</h3>
+              <div className="mb-4">
+                <h3 className="text-sm font-semibold text-gray-900 mb-3">Specifications</h3>
                 <div className="space-y-3">
-                  {product.specifications.map((spec) => (
+                  {(product.specifications || []).map((spec) => (
                     <div key={spec.id} className="border border-gray-200 rounded-lg">
                       <button
                         onClick={() => toggleSpecExpansion(spec.id)}
@@ -559,36 +606,11 @@ export default function ProductDetailComponent({ product }: ProductDetailProps) 
                 </div>
               </div>
 
-              {/* Artwork Upload */}
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Artwork & Design</h3>
-                <div className="space-y-3">
-                  <div className="border border-gray-200 rounded-lg p-4">
-                    <label className="block text-sm font-medium text-gray-900 mb-2">
-                      Upload Your Artwork
-                    </label>
-                    <div className="flex items-center space-x-3">
-                      <Input
-                        type="file"
-                        accept="image/*,.pdf,.ai,.eps"
-                        onChange={handleArtworkUpload}
-                        className="flex-1"
-                      />
-                      <Button variant="outline" size="sm">
-                        <Upload className="h-4 w-4 mr-2" />
-                        Browse
-                      </Button>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Supported formats: JPG, PNG, PDF, AI, EPS (Max 10MB)
-                    </p>
-                  </div>
-                </div>
-              </div>
 
-              {/* Rush Order Option */}
-              {product.turnaroundTime?.rushAvailable && (
-                <div className="mb-6">
+
+               {/* Rush Order Option */}
+               {product.turnaroundTime?.rushAvailable ? (
+                <div className="mb-4">
                   <div className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg">
                     <input
                       type="checkbox"
@@ -617,11 +639,11 @@ export default function ProductDetailComponent({ product }: ProductDetailProps) 
                     </div>
                   )}
                 </div>
-              )}
+               ) : null}
 
               {/* Shipping Information */}
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Shipping & Delivery</h3>
+              <div className="mb-4">
+                <h3 className="text-sm font-semibold text-gray-900 mb-3">Shipping & Delivery</h3>
                 <div className="space-y-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Zip Code</label>
@@ -633,7 +655,7 @@ export default function ProductDetailComponent({ product }: ProductDetailProps) 
                       maxLength={10}
                     />
                   </div>
-                  {product.shippingOptions && product.shippingOptions.length > 0 && (
+                  {product.shippingOptions && product.shippingOptions.length > 0 ? (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Shipping Method</label>
                       <select
@@ -649,7 +671,7 @@ export default function ProductDetailComponent({ product }: ProductDetailProps) 
                         ))}
                       </select>
                     </div>
-                  )}
+                   ) : null}
                   {shippingInfo && (
                     <div className="p-3 bg-blue-50 rounded-lg">
                       <div className="flex items-center justify-between text-sm">
@@ -663,7 +685,7 @@ export default function ProductDetailComponent({ product }: ProductDetailProps) 
               </div>
 
               {/* Quantity */}
-              <div className="mb-6">
+              <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Quantity</label>
                 <div className="flex items-center space-x-3">
                   <Button
@@ -693,7 +715,7 @@ export default function ProductDetailComponent({ product }: ProductDetailProps) 
               </div>
 
               {/* Dynamic Pricing Display */}
-              <div className="mb-6">
+              <div className="mb-4">
                 <div className="flex items-baseline space-x-2 mb-2">
                   <span className="text-3xl font-bold text-green-600">
                     ${price.final.toFixed(2)}
@@ -745,41 +767,35 @@ export default function ProductDetailComponent({ product }: ProductDetailProps) 
                 {loading && (
                   <p className="text-sm text-blue-600 mt-2">Calculating price...</p>
                 )}
-                
-                {!firebaseReady && (
-                  <p className="text-sm text-gray-500 mt-2">
-                    ⚠️ Dynamic pricing not available. Using static pricing.
-                  </p>
-                )}
               </div>
 
               {/* Action Buttons */}
-              <div className="space-y-3">
+              <div className="space-y-2">
                 <Button 
                   size="lg" 
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3"
                   asChild
                 >
                   <a href="/enhanced-editor">
                     <Palette className="h-5 w-5 mr-2" />
-                    Design Custom {product.name}
+                    Get Started
                   </a>
                 </Button>
                 <Button 
                   variant="outline" 
                   size="lg" 
-                  className="w-full border-blue-600 text-blue-600 hover:bg-blue-50"
+                  className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 font-medium py-3"
                   asChild
                 >
                   <a href="/enhanced-editor">
-                    <Settings className="h-5 w-5 mr-2" />
-                    Get Started with This One
+                    <Brush className="h-5 w-5 mr-2" />
+                    Start Your Own Design
                   </a>
                 </Button>
               </div>
 
               {/* Additional Info */}
-              <div className="mt-6 pt-6 border-t border-gray-200">
+              <div className="mt-4 pt-4 border-t border-gray-200">
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div className="flex items-center">
                     <Truck className="h-4 w-4 text-gray-500 mr-2" />
@@ -788,6 +804,59 @@ export default function ProductDetailComponent({ product }: ProductDetailProps) 
                   <div className="flex items-center">
                     <Shield className="h-4 w-4 text-gray-500 mr-2" />
                     <span>Warranty Included</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Ready to Ship Section */}
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <div className="flex items-center space-x-2 mb-3">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span className="text-sm font-medium text-gray-900">Ready to Ship</span>
+                </div>
+                <div className="text-sm text-gray-600 space-y-1">
+                  <div className="flex items-center">
+                    <Clock className="h-3 w-3 text-gray-400 mr-2" />
+                    <span>Estimated delivery: {product.turnaroundTime?.estimatedDays || 7} business days</span>
+                  </div>
+                  <div className="flex items-center">
+                    <Truck className="h-3 w-3 text-gray-400 mr-2" />
+                    <span>Free shipping on orders over $50</span>
+                  </div>
+                  <div className="flex items-center">
+                    <Shield className="h-3 w-3 text-gray-400 mr-2" />
+                    <span>30-day satisfaction guarantee</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Need Assistance Section */}
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <h4 className="text-sm font-medium text-gray-900 mb-3">Need Assistance?</h4>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">Design Help</span>
+                    <Button variant="link" size="sm" className="text-blue-600 hover:text-blue-700 p-0 h-auto">
+                      <a href="/contact" className="text-blue-600 hover:text-blue-700">
+                        Get Help
+                      </a>
+                    </Button>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">Technical Support</span>
+                    <Button variant="link" size="sm" className="text-blue-600 hover:text-blue-700 p-0 h-auto">
+                      <a href="/contact" className="text-blue-600 hover:text-blue-700">
+                        Contact Us
+                      </a>
+                    </Button>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">Order Status</span>
+                    <Button variant="link" size="sm" className="text-blue-600 hover:text-blue-700 p-0 h-auto">
+                      <a href="/orders" className="text-blue-600 hover:text-blue-700">
+                        Track Order
+                      </a>
+                    </Button>
                   </div>
                 </div>
               </div>

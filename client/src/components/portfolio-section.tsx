@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, ExternalLink, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { fadeInUp, staggerContainer } from "@/lib/animations";
+import { ExternalNavigationButton } from "@/components/ExternalNavigationButton";
 
 import { getImageUrl } from "@/lib/image-utils";
 
@@ -194,17 +195,15 @@ export default function PortfolioSection() {
           </motion.div>
           
           <motion.div className="text-center mt-6" variants={fadeInUp}>
-            <Button 
-              asChild
+            <ExternalNavigationButton 
+              url="https://animated-cheesecake-a81f47.netlify.app/"
               size="lg"
               variant="outline"
               className="border-2 border-[var(--master-blue)] text-[var(--master-blue)] hover:bg-[var(--master-blue)] hover:text-white px-8 py-3 transition-all duration-300"
             >
-              <a href="https://animated-cheesecake-a81f47.netlify.app/" target="_blank" rel="noopener noreferrer">
-                🎨 Start Designing Your Own
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </a>
-            </Button>
+              🎨 Start Designing Your Own
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </ExternalNavigationButton>
           </motion.div>
         </motion.div>
 

@@ -3,6 +3,7 @@ import { ArrowRight, Play, Star, CheckCircle, Zap, Car, Settings, Palette, Users
 import { Button } from "@/components/ui/button";
 import { fadeInUp, staggerContainer, magneticHover } from "@/lib/animations";
 import { getImageUrl } from "@/lib/image-utils";
+import { ExternalNavigationButton } from "@/components/ExternalNavigationButton";
 
 export default function HeroSection() {
   const scrollToQuote = () => {
@@ -120,18 +121,15 @@ export default function HeroSection() {
                 </Button>
               </motion.div>
               <motion.div variants={magneticHover}>
-                <Button 
-                  asChild
+                <ExternalNavigationButton 
+                  url="https://animated-cheesecake-a81f47.netlify.app/"
                   variant="outline"
                   size="lg"
                   className="border-2 border-white text-blue-600 hover:bg-white hover:text-blue-600 font-semibold px-8 py-4 rounded-xl text-lg transition-all duration-300 shadow-lg"
-                  data-testid="button-hero-editor"
                 >
-                  <a href="https://animated-cheesecake-a81f47.netlify.app/" target="_blank" rel="noopener noreferrer">
-                    <Palette className="mr-2 h-5 w-5" />
-                    Start Designing
-                  </a>
-                </Button>
+                  <Palette className="mr-2 h-5 w-5" />
+                  Start Designing
+                </ExternalNavigationButton>
               </motion.div>
             </motion.div>
           </motion.div>

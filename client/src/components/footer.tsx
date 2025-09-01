@@ -2,8 +2,14 @@ import { motion } from "framer-motion";
 import { Phone, Mail, MapPin, Star, Facebook, Instagram, Linkedin, Twitter, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { fadeInUp, staggerContainer } from "@/lib/animations";
+import logo2 from "@/assets/2.png";
+import { ExternalNavigationButton } from "@/components/ExternalNavigationButton";
+import ChatWidget from "@/components/ChatWidget";
+import { useState } from "react";
 
 export default function Footer() {
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  
   const services = [
     "LED Digital Signs",
     "Vehicle Wraps", 
@@ -49,7 +55,7 @@ export default function Footer() {
           {/* Company Info */}
           <motion.div className="lg:col-span-2" variants={fadeInUp}>
             <div className="flex items-center space-x-3 mb-6 cursor-pointer" onClick={() => window.location.href = '/'}>
-              <img src="2.png" alt="Master Signs" className="w-40 h-13 rounded-xl object-contain" />
+              <img src={logo2} alt="Master Signs" className="w-40 h-13 rounded-xl object-contain" />
               <div>
                 <h3 className="text-2xl font-bold">Master Signs</h3>
                 <p className="text-gray-400">Faith-Driven Excellence</p>
@@ -109,17 +115,15 @@ export default function Footer() {
                   </button>
                 </li>
               ))}
-              <li>
-                <a 
-                  href="https://animated-cheesecake-a81f47.netlify.app/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center space-x-2 bg-[var(--master-blue)] text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  <span>🎨</span>
-                  <span>Start Designing</span>
-                </a>
-              </li>
+                             <li>
+                 <ExternalNavigationButton 
+                   url="https://animated-cheesecake-a81f47.netlify.app/"
+                   className="inline-flex items-center space-x-2 bg-[var(--master-blue)] text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                 >
+                   <span>🎨</span>
+                   <span>Start Designing</span>
+                 </ExternalNavigationButton>
+               </li>
             </ul>
           </motion.div>
         </motion.div>
@@ -175,12 +179,19 @@ export default function Footer() {
       >
         <Button
           size="icon"
+          onClick={() => setIsChatOpen(true)}
           className="w-16 h-16 bg-[var(--master-blue)] rounded-full shadow-2xl hover:bg-blue-700 transition-all duration-300 animate-glow"
           data-testid="button-floating-chat"
         >
           <MessageSquare className="h-8 w-8 text-white" />
         </Button>
       </motion.div>
+
+      {/* Chat Widget */}
+      <ChatWidget 
+        isOpen={isChatOpen} 
+        onClose={() => setIsChatOpen(false)} 
+      />
     </footer>
   );
 }

@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import loadingLogo from "@/assets/Untitled design.png";
 
 interface LoadingScreenProps {
   isLoading: boolean;
@@ -41,7 +42,7 @@ export default function LoadingScreen({ isLoading }: LoadingScreenProps) {
           
           {/* Logo in center */}
           <motion.img
-            src="/Untitled design.png"
+            src={loadingLogo}
             alt="Master Signs"
             className="w-32 h-32 object-contain z-10 relative"
             initial={{ scale: 0.8, opacity: 0 }}

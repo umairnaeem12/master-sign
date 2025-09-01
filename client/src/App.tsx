@@ -20,10 +20,11 @@ import ProductsBrowsePage from "@/pages/products-browse";
 // import EnhancedEditorDemo from "../../pages/enhanced-editor-demo";
 // import { SignEditor } from "../../components/design-editor";
 import DebugCategoriesPage from "@/pages/debug-categories";
-import EnhancedEditorDemo from "../../pages/enhanced-editor-demo";
 import { LoadingProvider, useLoading } from "@/contexts/LoadingContext";
+import { ProductProvider } from "@/contexts/ProductContext";
 import LoadingScreen from "@/components/LoadingScreen";
 import { usePageTransition } from "@/hooks/usePageTransition";
+import { ExternalNavigationWrapper } from "@/components/ExternalNavigationWrapper";
 
 function Router() {
   return (
@@ -40,7 +41,6 @@ function Router() {
       {/* <Route path="/enhanced-editor" component={EnhancedEditorDemo} /> */}
       {/* <Route path="/sign-editor" component={SignEditor} /> */}
       <Route path="/debug-categories" component={DebugCategoriesPage} />
-      <Route path="/enhanced-editor" component={EnhancedEditorDemo} />
       {/* Editor routes removed */}
       {/* Studio / test routes removed */}
       <Route path="/product/:id" component={ProductDetailPage} />
@@ -56,10 +56,10 @@ function AppContent() {
   usePageTransition(); // Handle page transitions
 
   return (
-    <>
+    <ExternalNavigationWrapper>
       <LoadingScreen isLoading={isLoading} />
       <Router />
-    </>
+    </ExternalNavigationWrapper>
   );
 }
 
@@ -67,10 +67,12 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <LoadingProvider>
-        <TooltipProvider>
-          <Toaster />
-          <AppContent />
-        </TooltipProvider>
+        <ProductProvider>
+          <TooltipProvider>
+            <Toaster />
+            <AppContent />
+          </TooltipProvider>
+        </ProductProvider>
       </LoadingProvider>
     </QueryClientProvider>
   );
