@@ -131,26 +131,26 @@ export default function ClientReviews() {
   };
 
   return (
-    <section id="reviews" className="py-20 bg-white">
+    <section id="reviews" className="py-12 sm:py-16 lg:py-20 bg-white overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div 
-          className="text-center mb-16"
+          className="text-center mb-12 sm:mb-16"
           initial="initial"
           whileInView="animate"
           viewport={{ once: true }}
           variants={fadeInUp}
         >
           <div className="flex items-center justify-center mb-4">
-            <MessageSquare className="h-8 w-8 text-blue-600 mr-3" />
-            <h2 className="text-4xl font-bold text-gray-900">Client Reviews</h2>
+            <MessageSquare className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 mr-2 sm:mr-3" />
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">Client Reviews</h2>
           </div>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto px-2">
             See what our clients say about their experience with Master Signs
           </p>
         </motion.div>
 
         <motion.div 
-          className="grid md:grid-cols-2 gap-8"
+          className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8"
           initial="initial"
           whileInView="animate"
           viewport={{ once: true }}
@@ -160,33 +160,33 @@ export default function ClientReviews() {
             <motion.div
               key={review.id}
               variants={fadeInUp}
-              className="bg-gray-50 rounded-xl p-6 border border-gray-200"
+              className="bg-gray-50 rounded-xl p-4 sm:p-6 border border-gray-200"
             >
               {/* Review Header */}
-              <div className="flex items-start justify-between mb-4">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4 gap-3">
                 <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
-                    <span className="text-white font-semibold">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-white font-semibold text-sm sm:text-base">
                       {review.clientName.split(' ').map(n => n[0]).join('')}
                     </span>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">{review.clientName}</h3>
-                    <div className="flex items-center space-x-2">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-gray-900 text-sm sm:text-base truncate">{review.clientName}</h3>
+                    <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2">
                       <div className="flex">
                         {renderStars(review.rating)}
                       </div>
-                      <span className="text-sm text-gray-500">
+                      <span className="text-xs sm:text-sm text-gray-500">
                         {new Date(review.date).toLocaleDateString()}
                       </span>
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 sm:flex-shrink-0">
                   {review.verified && (
                     <CheckCircle className="h-4 w-4 text-green-500" />
                   )}
-                  <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                  <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full whitespace-nowrap">
                     {review.service}
                   </span>
                 </div>
@@ -194,22 +194,22 @@ export default function ClientReviews() {
 
               {/* Review Content */}
               <div className="mb-4">
-                <p className="text-gray-700 leading-relaxed">{review.review}</p>
+                <p className="text-gray-700 leading-relaxed text-sm sm:text-base">{review.review}</p>
               </div>
 
               {/* Review Actions */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <button className="flex items-center space-x-1 text-sm text-gray-500 hover:text-blue-600 transition-colors">
-                    <ThumbsUp className="h-4 w-4" />
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
+                <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+                  <button className="flex items-center space-x-1 text-xs sm:text-sm text-gray-500 hover:text-blue-600 transition-colors">
+                    <ThumbsUp className="h-3 w-3 sm:h-4 sm:w-4" />
                     <span>Helpful ({review.helpful})</span>
                   </button>
                   {review.adminReply && (
                     <button 
                       onClick={() => toggleReply(review.id)}
-                      className="flex items-center space-x-1 text-sm text-blue-600 hover:text-blue-700 transition-colors"
+                      className="flex items-center space-x-1 text-xs sm:text-sm text-blue-600 hover:text-blue-700 transition-colors"
                     >
-                      <Reply className="h-4 w-4" />
+                      <Reply className="h-3 w-3 sm:h-4 sm:w-4" />
                       <span>View Reply</span>
                     </button>
                   )}
@@ -225,19 +225,19 @@ export default function ClientReviews() {
                   transition={{ duration: 0.3 }}
                   className="mt-4 pt-4 border-t border-gray-200"
                 >
-                  <div className="bg-blue-50 rounded-lg p-4">
+                  <div className="bg-blue-50 rounded-lg p-3 sm:p-4">
                     <div className="flex items-center space-x-2 mb-2">
-                      <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                      <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
                         <span className="text-white text-xs font-semibold">MS</span>
                       </div>
-                      <div>
-                        <span className="font-semibold text-blue-900">{review.adminReply.adminName}</span>
+                      <div className="min-w-0 flex-1">
+                        <span className="font-semibold text-blue-900 text-sm sm:text-base">{review.adminReply.adminName}</span>
                         <span className="text-xs text-gray-500 ml-2">
                           {new Date(review.adminReply.date).toLocaleDateString()}
                         </span>
                       </div>
                     </div>
-                    <p className="text-blue-800 text-sm leading-relaxed">
+                    <p className="text-blue-800 text-xs sm:text-sm leading-relaxed">
                       {review.adminReply.reply}
                     </p>
                   </div>
