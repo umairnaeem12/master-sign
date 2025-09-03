@@ -149,11 +149,11 @@ export default function TestimonialsSection() {
             variant="outline"
             size="icon"
             onClick={prevSlide}
-            className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-4 z-20 w-14 h-14 rounded-full border-2 border-blue-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 shadow-lg hover:shadow-xl bg-white/80 backdrop-blur-sm"
+            className="absolute left-2 sm:left-4 md:left-0 top-1/2 transform -translate-y-1/2 -translate-x-2 sm:-translate-x-4 z-20 w-10 h-10 sm:w-14 sm:h-14 rounded-full border-2 border-blue-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 shadow-lg hover:shadow-xl bg-white/80 backdrop-blur-sm"
             whileHover={{ scale: 1.1, x: -2 }}
             whileTap={{ scale: 0.95 }}
           >
-            <ChevronLeft className="h-6 w-6 text-blue-600" />
+            <ChevronLeft className="h-4 w-4 sm:h-6 sm:w-6 text-blue-600" />
           </Button>
 
           {/* Right Arrow - Positioned on the right side */}
@@ -161,17 +161,17 @@ export default function TestimonialsSection() {
             variant="outline"
             size="icon"
             onClick={nextSlide}
-            className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-4 z-20 w-14 h-14 rounded-full border-2 border-blue-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 shadow-lg hover:shadow-xl bg-white/80 backdrop-blur-sm"
+            className="absolute right-2 sm:right-4 md:right-0 top-1/2 transform -translate-y-1/2 translate-x-2 sm:translate-x-4 z-20 w-10 h-10 sm:w-14 sm:h-14 rounded-full border-2 border-blue-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 shadow-lg hover:shadow-xl bg-white/80 backdrop-blur-sm"
             whileHover={{ scale: 1.1, x: 2 }}
             whileTap={{ scale: 0.95 }}
           >
-            <ChevronRight className="h-6 w-6 text-blue-600" />
+            <ChevronRight className="h-4 w-4 sm:h-6 sm:w-6 text-blue-600" />
           </Button>
 
           {/* Slider Container with proper margins for hover elevation */}
           <div 
             ref={sliderRef}
-            className="relative overflow-hidden rounded-3xl mx-20 my-8"
+            className="relative overflow-hidden rounded-3xl mx-4 sm:mx-8 md:mx-16 lg:mx-20 my-8"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
           >
@@ -242,7 +242,7 @@ export default function TestimonialsSection() {
 
         {/* Trust Badges */}
         <motion.div 
-          className="flex justify-center items-center space-x-12 mt-16"
+          className="flex flex-col sm:flex-row justify-center items-center space-y-6 sm:space-y-0 sm:space-x-8 lg:space-x-12 mt-16"
           initial="initial"
           whileInView="animate"
           viewport={{ once: true }}
@@ -250,8 +250,8 @@ export default function TestimonialsSection() {
         >
           {trustStats.map((stat, index) => (
             <motion.div key={index} className="text-center" variants={fadeInUp}>
-              <div className="text-4xl font-bold text-blue-600 mb-2">{stat.value}</div>
-              <div className="text-gray-600">{stat.label}</div>
+              <div className="text-3xl sm:text-4xl font-bold text-blue-600 mb-2">{stat.value}</div>
+              <div className="text-sm sm:text-base text-gray-600">{stat.label}</div>
             </motion.div>
           ))}
         </motion.div>

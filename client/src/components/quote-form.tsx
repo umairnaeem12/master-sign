@@ -54,6 +54,7 @@ export default function QuoteForm() {
       // Create quote request
       const quoteData = {
         ...data,
+        service_type: data.serviceType, // Map serviceType to service_type
         files: [],
         status: 'pending'
       };
@@ -87,30 +88,30 @@ export default function QuoteForm() {
 
 
   return (
-    <section id="quote" className="py-24 bg-[var(--master-black)]">
+    <section id="quote" className="py-12 sm:py-16 lg:py-24 bg-[var(--master-black)] overflow-hidden">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div 
-          className="text-center mb-16"
+          className="text-center mb-12 sm:mb-16"
           initial="initial"
           whileInView="animate"
           viewport={{ once: true }}
           variants={staggerContainer}
         >
           <motion.div 
-            className="inline-flex items-center space-x-2 bg-[var(--master-blue)] bg-opacity-20 rounded-full px-6 py-3 mb-6"
+            className="inline-flex items-center space-x-2 bg-[var(--master-blue)] bg-opacity-20 rounded-full px-4 sm:px-6 py-2 sm:py-3 mb-4 sm:mb-6"
             variants={fadeInUp}
           >
-                                        <Quote className="h-5 w-5 text-white" />
-              <span className="text-white font-semibold">Free Quote</span>
+            <Quote className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+            <span className="text-white font-semibold text-sm sm:text-base">Free Quote</span>
           </motion.div>
           <motion.h2 
-            className="text-4xl lg:text-5xl font-bold text-white mb-6"
+            className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-white mb-4 sm:mb-6"
             variants={fadeInUp}
           >
             Ready to Transform Your Vision?
           </motion.h2>
           <motion.p 
-            className="text-xl text-gray-300 max-w-3xl mx-auto"
+            className="text-base sm:text-lg lg:text-xl text-gray-300 max-w-3xl mx-auto px-2"
             variants={fadeInUp}
           >
             Get a personalized quote for your signage project. Our team will work with you to bring your vision to life.
@@ -123,27 +124,27 @@ export default function QuoteForm() {
           viewport={{ once: true }}
           variants={fadeInUp}
         >
-          <Card className="glassmorphism-dark rounded-3xl p-8">
+          <Card className="glassmorphism-dark rounded-3xl p-4 sm:p-6 lg:p-8">
             <CardContent className="p-0">
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
                   {/* Personal Information */}
-                  <div className="grid md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                     <FormField
                       control={form.control}
                       name="name"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-white font-semibold">Full Name *</FormLabel>
+                          <FormLabel className="text-white font-semibold text-sm sm:text-base">Full Name *</FormLabel>
                           <FormControl>
                             <Input 
                               {...field}
                               placeholder="John Smith"
-                              className="bg-white bg-opacity-10 border-white border-opacity-20 text-white placeholder-gray-400 focus:ring-2 focus:ring-[var(--master-blue)]"
+                              className="bg-white bg-opacity-10 border-white border-opacity-20 text-white placeholder-gray-400 focus:ring-2 focus:ring-[var(--master-blue)] text-sm sm:text-base"
                               data-testid="input-name"
                             />
                           </FormControl>
-                          <FormMessage className="text-red-400" />
+                          <FormMessage className="text-red-400 text-xs sm:text-sm" />
                         </FormItem>
                       )}
                     />
@@ -152,40 +153,40 @@ export default function QuoteForm() {
                       name="email"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-white font-semibold">Email Address *</FormLabel>
+                          <FormLabel className="text-white font-semibold text-sm sm:text-base">Email Address *</FormLabel>
                           <FormControl>
                             <Input 
                               {...field}
                               type="email"
                               placeholder="john@company.com"
-                              className="bg-white bg-opacity-10 border-white border-opacity-20 text-white placeholder-gray-400 focus:ring-2 focus:ring-[var(--master-blue)]"
+                              className="bg-white bg-opacity-10 border-white border-opacity-20 text-white placeholder-gray-400 focus:ring-2 focus:ring-[var(--master-blue)] text-sm sm:text-base"
                               data-testid="input-email"
                             />
                           </FormControl>
-                          <FormMessage className="text-red-400" />
+                          <FormMessage className="text-red-400 text-xs sm:text-sm" />
                         </FormItem>
                       )}
                     />
                   </div>
 
-                  <div className="grid md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                     <FormField
                       control={form.control}
                       name="phone"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-white font-semibold">Phone Number</FormLabel>
+                          <FormLabel className="text-white font-semibold text-sm sm:text-base">Phone Number</FormLabel>
                           <FormControl>
                             <Input 
                               {...field}
                               value={field.value ?? ""}
                               type="tel"
                               placeholder="(555) 123-4567"
-                              className="bg-white bg-opacity-10 border-white border-opacity-20 text-white placeholder-gray-400 focus:ring-2 focus:ring-[var(--master-blue)]"
+                              className="bg-white bg-opacity-10 border-white border-opacity-20 text-white placeholder-gray-400 focus:ring-2 focus:ring-[var(--master-blue)] text-sm sm:text-base"
                               data-testid="input-phone"
                             />
                           </FormControl>
-                          <FormMessage className="text-red-400" />
+                          <FormMessage className="text-red-400 text-xs sm:text-sm" />
                         </FormItem>
                       )}
                     />
@@ -194,17 +195,17 @@ export default function QuoteForm() {
                       name="company"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-white font-semibold">Company Name</FormLabel>
+                          <FormLabel className="text-white font-semibold text-sm sm:text-base">Company Name</FormLabel>
                           <FormControl>
                             <Input 
                               {...field}
                               value={field.value ?? ""}
                               placeholder="Your Company"
-                              className="bg-white bg-opacity-10 border-white border-opacity-20 text-white placeholder-gray-400 focus:ring-2 focus:ring-[var(--master-blue)]"
+                              className="bg-white bg-opacity-10 border-white border-opacity-20 text-white placeholder-gray-400 focus:ring-2 focus:ring-[var(--master-blue)] text-sm sm:text-base"
                               data-testid="input-company"
                             />
                           </FormControl>
-                          <FormMessage className="text-red-400" />
+                          <FormMessage className="text-red-400 text-xs sm:text-sm" />
                         </FormItem>
                       )}
                     />
@@ -216,11 +217,11 @@ export default function QuoteForm() {
                     name="serviceType"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-white font-semibold">Service Type *</FormLabel>
+                        <FormLabel className="text-white font-semibold text-sm sm:text-base">Service Type *</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger 
-                              className="bg-white bg-opacity-10 border-white border-opacity-20 text-white focus:ring-2 focus:ring-[var(--master-blue)]"
+                              className="bg-white bg-opacity-10 border-white border-opacity-20 text-white focus:ring-2 focus:ring-[var(--master-blue)] text-sm sm:text-base"
                               data-testid="select-service-type"
                             >
                               <SelectValue placeholder="Select a service..." />
@@ -235,22 +236,22 @@ export default function QuoteForm() {
                             <SelectItem value="other">Other / Multiple Services</SelectItem>
                           </SelectContent>
                         </Select>
-                        <FormMessage className="text-red-400" />
+                        <FormMessage className="text-red-400 text-xs sm:text-sm" />
                       </FormItem>
                     )}
                   />
 
-                  <div className="grid md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                     <FormField
                       control={form.control}
                       name="timeline"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-white font-semibold">Project Timeline</FormLabel>
+                          <FormLabel className="text-white font-semibold text-sm sm:text-base">Project Timeline</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value ?? ""}>
                             <FormControl>
                               <SelectTrigger 
-                                className="bg-white bg-opacity-10 border-white border-opacity-20 text-white focus:ring-2 focus:ring-[var(--master-blue)]"
+                                className="bg-white bg-opacity-10 border-white border-opacity-20 text-white focus:ring-2 focus:ring-[var(--master-blue)] text-sm sm:text-base"
                                 data-testid="select-timeline"
                               >
                                 <SelectValue placeholder="Select timeline..." />
@@ -264,7 +265,7 @@ export default function QuoteForm() {
                               <SelectItem value="flexible">Flexible</SelectItem>
                             </SelectContent>
                           </Select>
-                          <FormMessage className="text-red-400" />
+                          <FormMessage className="text-red-400 text-xs sm:text-sm" />
                         </FormItem>
                       )}
                     />
@@ -273,11 +274,11 @@ export default function QuoteForm() {
                       name="budget"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-white font-semibold">Budget Range</FormLabel>
+                          <FormLabel className="text-white font-semibold text-sm sm:text-base">Budget Range</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value ?? ""}>
                             <FormControl>
                               <SelectTrigger 
-                                className="bg-white bg-opacity-10 border-white border-opacity-20 text-white focus:ring-2 focus:ring-[var(--master-blue)]"
+                                className="bg-white bg-opacity-10 border-white border-opacity-20 text-white focus:ring-2 focus:ring-[var(--master-blue)] text-sm sm:text-base"
                                 data-testid="select-budget"
                               >
                                 <SelectValue placeholder="Select budget..." />
@@ -291,7 +292,7 @@ export default function QuoteForm() {
                               <SelectItem value="over-25k">Over $25,000</SelectItem>
                             </SelectContent>
                           </Select>
-                          <FormMessage className="text-red-400" />
+                          <FormMessage className="text-red-400 text-xs sm:text-sm" />
                         </FormItem>
                       )}
                     />
@@ -302,18 +303,18 @@ export default function QuoteForm() {
                     name="description"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-white font-semibold">Project Description</FormLabel>
+                        <FormLabel className="text-white font-semibold text-sm sm:text-base">Project Description</FormLabel>
                         <FormControl>
                           <Textarea 
                             {...field}
                             value={field.value ?? ""}
                             rows={4}
                             placeholder="Tell us about your project requirements, size, location, and any specific needs..."
-                            className="bg-white bg-opacity-10 border-white border-opacity-20 text-white placeholder-gray-400 focus:ring-2 focus:ring-[var(--master-blue)] resize-none"
+                            className="bg-white bg-opacity-10 border-white border-opacity-20 text-white placeholder-gray-400 focus:ring-2 focus:ring-[var(--master-blue)] resize-none text-sm sm:text-base"
                             data-testid="textarea-description"
                           />
                         </FormControl>
-                        <FormMessage className="text-red-400" />
+                        <FormMessage className="text-red-400 text-xs sm:text-sm" />
                       </FormItem>
                     )}
                   />
@@ -326,14 +327,14 @@ export default function QuoteForm() {
                       <Button 
                         type="submit"
                         disabled={uploading}
-                        className="ripple bg-[var(--master-blue)] text-white px-12 py-4 rounded-2xl font-bold text-lg hover:bg-blue-700 transition-all duration-300 transform hover:scale-105 shadow-2xl"
+                        className="ripple bg-[var(--master-blue)] text-white px-4 sm:px-8 lg:px-12 py-3 sm:py-4 rounded-2xl font-bold text-base sm:text-lg hover:bg-blue-700 transition-all duration-300 transform hover:scale-105 shadow-2xl w-full sm:w-auto"
                         data-testid="button-submit-quote"
                       >
-                        <Send className="h-5 w-5 mr-2" />
+                        <Send className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                         {uploading ? "Sending..." : "Send My Quote Request"}
                       </Button>
                     </motion.div>
-                    <p className="text-gray-400 text-sm mt-4">We'll respond within 24 hours with your personalized quote</p>
+                    <p className="text-gray-400 text-xs sm:text-sm mt-4 px-2">We'll respond within 24 hours with your personalized quote</p>
                   </div>
                 </form>
               </Form>
