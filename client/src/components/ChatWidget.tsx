@@ -164,7 +164,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ isOpen, onClose }) => {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.8, y: 20 }}
           transition={{ duration: 0.3, ease: "easeOut" }}
-          className="fixed bottom-24 right-8 z-[9999] w-96 h-[500px] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col"
+          className="fixed bottom-16 sm:bottom-24 right-4 sm:right-8 z-[9999] w-80 sm:w-96 h-[400px] sm:h-[500px] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col"
         >
           {/* Header */}
           <div className="bg-[var(--master-blue)] text-white p-4 flex items-center justify-between">

@@ -31,12 +31,12 @@ export default function Home() {
     <div className="min-h-screen bg-white">
       <Navigation />
       <HeroSection />
+      <TestimonialsSection />
       <ProductsSection />
       <ServicesSection />
       <PortfolioSection />
       <AboutSection />
       <QuoteForm />
-      <TestimonialsSection />
       <ClientReviews />
       <FAQsSection />
       <Footer />

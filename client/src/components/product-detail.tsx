@@ -18,7 +18,8 @@ import {
   Clock,
   Upload,
   Zap,
-  Brush
+  Brush,
+  ShoppingCart
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -773,22 +774,22 @@ export default function ProductDetailComponent({ product }: ProductDetailProps) 
               <div className="space-y-2">
                 <Button 
                   size="lg" 
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 transition-transform duration-150 hover:scale-105"
                   asChild
                 >
-                  <a href="/enhanced-editor">
-                    <Palette className="h-5 w-5 mr-2" />
-                    Get Started
+                  <a href="/enhanced-editor" className="flex items-center justify-center">
+                    <ShoppingCart className="h-5 w-5 mr-2 transition-transform duration-150 group-hover:scale-110" />
+                    Proceed to Cart
                   </a>
                 </Button>
                 <Button 
                   variant="outline" 
                   size="lg" 
-                  className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 font-medium py-3"
+                  className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 font-medium py-3 transition-transform duration-150 hover:scale-105"
                   asChild
                 >
-                  <a href="/enhanced-editor">
-                    <Brush className="h-5 w-5 mr-2" />
+                  <a href="/enhanced-editor" className="flex items-center justify-center">
+                    <Brush className="h-5 w-5 mr-2 transition-transform duration-150 group-hover:scale-110" />
                     Start Your Own Design
                   </a>
                 </Button>

@@ -56,5 +56,19 @@ service cloud.firestore {
       allow update, delete: if request.auth != null && 
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
+    
+    // Categories - viewable by everyone, editable by admins
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Sub-categories - viewable by everyone, editable by admins
+    match /subCategories/{subCategoryId} {
+      allow read: if true;
+      allow write: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
   }
 }

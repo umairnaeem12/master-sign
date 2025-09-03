@@ -8,6 +8,23 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 
+// Type definitions
+interface Product {
+  id: string;
+  category?: string;
+  [key: string]: any;
+}
+
+interface Category {
+  id: string;
+  name?: string;
+  categoryId?: string;
+  icon?: string;
+  image?: string;
+  description?: string;
+  [key: string]: any;
+}
+
 export const getProducts = functions.https.onCall(async (data, context) => {
   try {
     const { category, subcategory, limit = 50 } = data || {};
@@ -31,10 +48,36 @@ export const getProducts = functions.https.onCall(async (data, context) => {
     const products = snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
-    }));
+    })) as Product[];
+    
+    // Fetch all categories to enrich product data
+    const categoriesSnapshot = await db.collection('categories').where('isActive', '==', true).get();
+    const categories = categoriesSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as Category[];
+    
+    // Create a map for quick category lookup
+    const categoryMap = new Map();
+    categories.forEach(cat => {
+      categoryMap.set(cat.id, cat);
+    });
+    
+    // Enrich products with category information
+    const enrichedProducts = products.map((product: Product) => {
+      const categoryData = categoryMap.get(product.category);
+      return {
+        ...product,
+        categoryName: categoryData?.name || 'Unknown Category',
+        categoryId: categoryData?.categoryId || 'UNKNOWN',
+        categoryIcon: categoryData?.icon || '🎯',
+        categoryImage: categoryData?.image || '',
+        categoryDescription: categoryData?.description || ''
+      };
+    });
     
     // Sort on client side to avoid index requirements
-    products.sort((a: any, b: any) => {
+    enrichedProducts.sort((a: any, b: any) => {
       const aTime = a.createdAt?._seconds || 0;
       const bTime = b.createdAt?._seconds || 0;
       return bTime - aTime; // Descending order
@@ -42,8 +85,8 @@ export const getProducts = functions.https.onCall(async (data, context) => {
     
     return {
       success: true,
-      data: products,
-      count: products.length
+      data: enrichedProducts,
+      count: enrichedProducts.length
     };
   } catch (error) {
     console.error('Error fetching products:', error);
@@ -68,7 +111,26 @@ export const getProductById = functions.https.onCall(async (data, context) => {
     const product = {
       id: doc.id,
       ...doc.data()
-    };
+    } as Product;
+    
+    // Fetch category information for this product
+    if (product.category) {
+      try {
+        const categoryDoc = await db.collection('categories').doc(product.category).get();
+        if (categoryDoc.exists) {
+          const categoryData = categoryDoc.data();
+          product.categoryName = categoryData?.name || 'Unknown Category';
+          product.categoryId = categoryData?.categoryId || 'UNKNOWN';
+          product.categoryIcon = categoryData?.icon || '🎯';
+          product.categoryImage = categoryData?.image || '';
+          product.categoryDescription = categoryData?.description || '';
+        }
+      } catch (categoryError) {
+        console.warn('Could not fetch category data for product:', productId, categoryError);
+        product.categoryName = 'Unknown Category';
+        product.categoryId = 'UNKNOWN';
+      }
+    }
     
     return {
       success: true,

@@ -8,8 +8,12 @@ export function usePageTransition() {
   const prevLocation = useRef(location);
 
   useEffect(() => {
-    // Only show loading if location actually changed (not on initial load)
-    if (prevLocation.current !== location && prevLocation.current !== '/') {
+    // Don't show loading for authentication pages
+    const isAuthPage = location === '/login' || location === '/signup';
+    const wasAuthPage = prevLocation.current === '/login' || prevLocation.current === '/signup';
+    
+    // Only show loading if location actually changed (not on initial load) and not for auth pages
+    if (prevLocation.current !== location && prevLocation.current !== '/' && !isAuthPage && !wasAuthPage) {
       startLoading();
       
       // Hide loading after a short delay

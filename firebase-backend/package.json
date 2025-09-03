@@ -1,6 +1,7 @@
 {
   "name": "signflow-firebase-backend",
   "version": "1.0.0",
+  "type": "module",
   "description": "Firebase backend for SignFlow - Professional Sign Design Platform",
   "main": "src/index.js",
   "scripts": {
@@ -11,7 +12,13 @@
     "deploy:functions": "firebase deploy --only functions",
     "deploy:firestore": "firebase deploy --only firestore",
     "deploy:storage": "firebase deploy --only storage",
-    "setup": "firebase init"
+    "setup": "firebase init",
+    "seed:images": "node scripts/run-image-seeding.js",
+    "seed:images:dry-run": "node scripts/dry-run-image-seeding.js",
+    "fix:supabase-images": "node scripts/fix-supabase-to-firebase-images.js",
+    "check:storage": "node scripts/check-storage-structure.js",
+    "debug": "node debug.js",
+    "seed:direct": "node scripts/seed-product-images.js"
   },
   "dependencies": {
     "firebase": "^10.7.1",

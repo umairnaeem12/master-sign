@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, User, Mail, Phone, Lock, CheckCircle, Star, Shield, Award, Users, Palette, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { fadeInUp, staggerContainer } from "@/lib/animations";
-import Navigation from "@/components/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import { useLocation } from "wouter";
+import logo from "@/assets/1.png";
 
 interface SignupForm {
   firstName: string;
@@ -41,6 +43,9 @@ export default function SignupPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+
+  const { signup } = useAuth();
+  const [, setLocation] = useLocation();
 
   const validateForm = (): boolean => {
     const newErrors: ValidationErrors = {};
@@ -117,10 +122,7 @@ export default function SignupPage() {
     setIsSubmitting(true);
     
     try {
-      // Import Firebase auth function
-      const { registerUser } = await import('@/lib/firebase-auth');
-      
-      const result = await registerUser(formData.email, formData.password, {
+      const result = await signup(formData.email, formData.password, {
         firstName: formData.firstName,
         lastName: formData.lastName,
         phone: formData.phone,
@@ -129,6 +131,10 @@ export default function SignupPage() {
 
       if (result.success) {
         setIsSuccess(true);
+        // Redirect to login with email auto-fill after 2 seconds
+        setTimeout(() => {
+          setLocation(`/login?email=${encodeURIComponent(formData.email)}`);
+        }, 2000);
       } else {
         setErrors({ general: result.error });
       }
@@ -163,25 +169,21 @@ export default function SignupPage() {
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-        <Navigation />
-        <div className="flex items-center justify-center min-h-[calc(100vh-80px)]">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+        <div className="flex items-center justify-center min-h-screen">
           <motion.div 
-            className="bg-white rounded-2xl p-8 shadow-xl max-w-md w-full text-center"
+            className="bg-white rounded-3xl p-8 shadow-2xl max-w-md w-full text-center border border-gray-100"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
           >
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="h-8 w-8 text-green-600" />
+            <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-teal-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+              <CheckCircle className="h-8 w-8 text-white" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Account Created Successfully!</h2>
-            <p className="text-gray-600 mb-6">Welcome to Master Signs. Your account has been created successfully.</p>
-            <Button 
-              onClick={() => window.location.href = '/login'}
-              className="w-full bg-blue-600 hover:bg-blue-700"
-            >
-              Continue to Login
-            </Button>
+            <p className="text-gray-600 mb-6">Welcome to Master Signs. Your account has been created successfully. Redirecting to login...</p>
+            <div className="flex items-center justify-center mb-4">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600"></div>
+            </div>
           </motion.div>
         </div>
       </div>
@@ -189,60 +191,76 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <Navigation />
-      <div className="flex min-h-[calc(100vh-80px)]">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      <div className="flex min-h-screen">
         {/* Left Side - Content */}
-        <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-600 to-blue-800 text-white p-12">
-          <div className="max-w-md mx-auto flex flex-col justify-center">
+        <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-700 text-white p-12 relative overflow-hidden">
+          {/* Background decorative elements */}
+          <div className="absolute inset-0">
+            <div className="absolute top-20 left-20 w-72 h-72 bg-white/10 rounded-full blur-3xl"></div>
+            <div className="absolute bottom-20 right-20 w-96 h-96 bg-purple-400/20 rounded-full blur-3xl"></div>
+            <div className="absolute top-1/2 left-1/3 w-80 h-80 bg-blue-400/20 rounded-full blur-3xl"></div>
+          </div>
+          
+          <div className="max-w-md mx-auto flex flex-col justify-center relative z-10">
             <motion.div
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8 }}
             >
               <div className="flex items-center mb-8">
-                <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mr-4">
-                  <Star className="h-8 w-8 text-white" />
-                </div>
+                <motion.div 
+                  className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mr-4 overflow-hidden border border-white/30 shadow-xl cursor-pointer hover:shadow-2xl transition-shadow duration-300"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5 }}
+                  onClick={() => setLocation("/")}
+                >
+                  <img 
+                    src={logo} 
+                    alt="Master Signs Logo" 
+                    className="w-12 h-12 object-contain"
+                  />
+                </motion.div>
                 <div>
-                  <h1 className="text-3xl font-bold">Master Signs</h1>
-                  <p className="text-blue-100">Make Your Statement</p>
+                  <h1 className="text-3xl font-bold text-white">Master Signs</h1>
+                  <p className="text-blue-100 font-medium">Make Your Statement</p>
                 </div>
               </div>
               
-              <h2 className="text-4xl font-bold mb-6">Join Our Community</h2>
-              <p className="text-xl text-blue-100 mb-8">
+              <h2 className="text-4xl font-bold mb-6 text-white">Join Our Community</h2>
+              <p className="text-xl text-blue-100 mb-8 leading-relaxed">
                 Create your account and start designing amazing signage with our professional tools and expert support.
               </p>
               
               <div className="space-y-6">
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                <div className="flex items-center space-x-4 p-4 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
                     <Shield className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-lg">Secure & Reliable</h3>
+                    <h3 className="font-semibold text-lg text-white">Secure & Reliable</h3>
                     <p className="text-blue-100">Your data is protected with enterprise-grade security</p>
                   </div>
                 </div>
                 
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                <div className="flex items-center space-x-4 p-4 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
+                  <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-teal-500 rounded-xl flex items-center justify-center shadow-lg">
                     <Award className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-lg">Professional Quality</h3>
+                    <h3 className="font-semibold text-lg text-white">Professional Quality</h3>
                     <p className="text-blue-100">Access to premium design tools and templates</p>
                   </div>
                 </div>
                 
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                <div className="flex items-center space-x-4 p-4 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
+                  <div className="w-12 h-12 bg-gradient-to-br from-pink-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
                     <Users className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-lg">Expert Support</h3>
-                    <p className="text-blue-100">24/7 customer support and design consultation</p>
+                    <h3 className="font-semibold text-lg text-white">Expert Support</h3>
+                    <p className="text-blue-100">Get help from our team of signage professionals</p>
                   </div>
                 </div>
               </div>
@@ -251,22 +269,32 @@ export default function SignupPage() {
         </div>
 
         {/* Right Side - Form */}
-        <div className="flex-1 flex items-center justify-center p-8">
+        <div className="flex-1 flex items-center justify-center p-8 bg-white">
           <motion.div 
             className="w-full max-w-lg space-y-8"
             initial="initial"
             animate="animate"
             variants={staggerContainer}
           >
-            {/* Mobile Header */}
+                        {/* Mobile Header */}
             <motion.div variants={fadeInUp} className="text-center lg:hidden">
-              <div className="flex items-center justify-center mb-6">
-                <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mr-3">
-                  <Star className="h-6 w-6 text-white" />
-                </div>
+                              <div className="flex items-center justify-center mb-6">
+                  <motion.div 
+                    className="w-12 h-12 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center mr-3 overflow-hidden shadow-lg cursor-pointer hover:shadow-xl transition-shadow duration-300"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.5 }}
+                    onClick={() => setLocation("/")}
+                  >
+                    <img 
+                      src={logo} 
+                      alt="Master Signs Logo" 
+                      className="w-8 h-8 object-contain"
+                    />
+                  </motion.div>
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900">Master Signs</h1>
-                  <p className="text-blue-600 text-sm">Make Your Statement</p>
+                  <p className="text-indigo-600 text-sm font-medium">Make Your Statement</p>
                 </div>
               </div>
               
@@ -280,12 +308,12 @@ export default function SignupPage() {
               <p className="text-gray-600">Join Master Signs and start creating amazing signage</p>
             </motion.div>
 
-                         {/* Form */}
-             <motion.form 
-               className="bg-white rounded-2xl shadow-xl p-10 border border-gray-100"
-               variants={fadeInUp}
-               onSubmit={handleSubmit}
-             >
+            {/* Form */}
+            <motion.form 
+              className="bg-white rounded-3xl shadow-2xl p-10 border border-gray-100"
+              variants={fadeInUp}
+              onSubmit={handleSubmit}
+            >
                <div className="space-y-8">
                  {/* General Error */}
                  {errors.general && (
@@ -470,8 +498,8 @@ export default function SignupPage() {
                     <Button
                       type="button"
                       variant="ghost"
-                      onClick={() => window.location.href = '/login'}
-                      className="text-blue-600 hover:text-blue-700 p-0 h-auto font-medium"
+                      onClick={() => setLocation('/login')}
+                      className="text-blue-600 hover:text-blue-700 p-0 h-auto font-medium transition-all duration-300 hover:scale-105"
                     >
                       Sign in here
                     </Button>

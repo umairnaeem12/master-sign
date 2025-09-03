@@ -20,8 +20,17 @@ export const getCategories = functions.https.onCall(async (data, context) => {
       ...doc.data()
     }));
     
+    // Remove duplicates based on categoryId (keep the first occurrence)
+    const uniqueCategories = categories.reduce((acc: any[], category: any) => {
+      const existingIndex = acc.findIndex(cat => cat.categoryId === category.categoryId);
+      if (existingIndex === -1) {
+        acc.push(category);
+      }
+      return acc;
+    }, []);
+    
     // Sort on client side
-    const sortedCategories = categories.sort((a: any, b: any) => {
+    const sortedCategories = uniqueCategories.sort((a: any, b: any) => {
       if (a.sortOrder !== b.sortOrder) {
         return (a.sortOrder || 0) - (b.sortOrder || 0);
       }

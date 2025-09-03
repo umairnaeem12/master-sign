@@ -3,21 +3,36 @@ import { motion } from "framer-motion";
 import { Phone, Mail, MapPin, User, Search, ShoppingCart, Menu, X, ChevronDown, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { fadeInUp, magneticHover } from "@/lib/animations";
 import { ProductCategory, PRODUCT_SUBCATEGORIES } from "@/types/products";
 import { getImageUrl } from "@/lib/image-utils";
+import { useAuth } from "@/contexts/AuthContext";
+import { useLocation } from "wouter";
 import logo1 from "@/assets/1.png";
 import { StartDesigningButton } from "@/components/ExternalNavigationButton";
 
 export default function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [hoveredCategory, setHoveredCategory] = useState<ProductCategory | null>(null);
+  const { user, isAuthenticated } = useAuth();
+  const [, setLocation] = useLocation();
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
     }
+    setIsMobileMenuOpen(false);
+  };
+
+  const handleProfileClick = () => {
+    setLocation("/dashboard");
+    setIsMobileMenuOpen(false);
+  };
+
+  const handleAuthClick = (path: string) => {
+    setLocation(path);
     setIsMobileMenuOpen(false);
   };
 
@@ -195,22 +210,33 @@ export default function Navigation() {
 
             {/* Right Navigation */}
             <div className="flex items-center space-x-4">
-              <Button 
-                variant="ghost"
-                onClick={() => window.location.href = '/login'}
-                className="hidden md:flex items-center space-x-1 text-gray-600 hover:text-blue-600 transition-colors"
-                data-testid="button-customer-login"
-              >
-                <User className="h-5 w-5" />
-                <span>Sign In</span>
-              </Button>
-              <Button 
-                variant="outline"
-                onClick={() => window.location.href = '/signup'}
-                className="hidden md:flex border-blue-600 text-blue-600 hover:bg-blue-50 font-medium"
-              >
-                Sign Up
-              </Button>
+              {isAuthenticated ? (
+                                 <Avatar className="h-8 w-8 cursor-pointer" onClick={handleProfileClick}>
+                   <AvatarImage src={user?.profileImage || undefined} alt={user?.fullName || "User"} />
+                   <AvatarFallback className="bg-blue-600 text-white">
+                     {user?.firstName?.[0] || "U"}
+                   </AvatarFallback>
+                 </Avatar>
+              ) : (
+                <>
+                  <Button 
+                    variant="ghost"
+                    onClick={() => handleAuthClick('/login')}
+                    className="hidden md:flex items-center space-x-1 text-gray-600 hover:text-blue-600 transition-colors"
+                    data-testid="button-customer-login"
+                  >
+                    <User className="h-5 w-5" />
+                    <span>Sign In</span>
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => handleAuthClick('/signup')}
+                    className="hidden md:flex border-blue-600 text-blue-600 hover:bg-blue-50 font-medium"
+                  >
+                    Sign Up
+                  </Button>
+                </>
+              )}
               
               <motion.div {...magneticHover}>
                 <StartDesigningButton 
@@ -376,11 +402,50 @@ export default function Navigation() {
                 ))}
               </div>
               
-                             <div className="pt-4 border-t border-gray-200">
-                 <StartDesigningButton 
-                   className="w-full bg-blue-600 text-white hover:bg-blue-700 font-semibold py-3 rounded-lg transition-colors"
-                 />
-               </div>
+                             {/* Mobile Authentication */}
+              <div className="pt-4 border-t border-gray-200 space-y-3">
+                {isAuthenticated ? (
+                  <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={user?.profileImage || undefined} alt={user?.fullName || "User"} />
+                      <AvatarFallback className="bg-blue-600 text-white">
+                        {user?.firstName?.[0] || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <div className="font-semibold text-gray-900">{user?.firstName || "User"}</div>
+                      <div className="text-sm text-gray-600">{user?.email}</div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleProfileClick}
+                      className="text-blue-600 hover:text-blue-700"
+                    >
+                      Profile
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => handleAuthClick('/login')}
+                      className="w-full"
+                    >
+                      Sign In
+                    </Button>
+                    <Button
+                      onClick={() => handleAuthClick('/signup')}
+                      className="w-full bg-blue-600 hover:bg-blue-700"
+                    >
+                      Sign Up
+                    </Button>
+                  </div>
+                )}
+                <StartDesigningButton 
+                  className="w-full bg-blue-600 text-white hover:bg-blue-700 font-semibold py-3 rounded-lg transition-colors"
+                />
+              </div>
             </div>
           </motion.div>
         )}

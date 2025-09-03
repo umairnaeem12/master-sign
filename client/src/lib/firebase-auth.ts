@@ -102,3 +102,55 @@ export const getCurrentUserData = async (userId: string) => {
     return { success: false, error: error.message };
   }
 };
+
+// Update user profile
+export const updateUserProfile = async (userId: string, userData: {
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  company?: string;
+  profileImage?: string;
+}) => {
+  try {
+    const userRef = doc(db, 'users', userId);
+    
+    // Get current user data
+    const currentUserDoc = await getDoc(userRef);
+    if (!currentUserDoc.exists()) {
+      return { success: false, error: 'User not found' };
+    }
+
+    const currentData = currentUserDoc.data();
+    
+    // Prepare update data
+    const updateData: any = {
+      updatedAt: new Date()
+    };
+
+    // Update fields if provided
+    if (userData.firstName !== undefined) {
+      updateData.firstName = userData.firstName;
+      updateData.fullName = `${userData.firstName} ${userData.lastName || currentData.lastName}`;
+    }
+    if (userData.lastName !== undefined) {
+      updateData.lastName = userData.lastName;
+      updateData.fullName = `${userData.firstName || currentData.firstName} ${userData.lastName}`;
+    }
+    if (userData.phone !== undefined) {
+      updateData.phone = userData.phone;
+    }
+    if (userData.company !== undefined) {
+      updateData.company = userData.company;
+    }
+    if (userData.profileImage !== undefined) {
+      updateData.profileImage = userData.profileImage;
+    }
+
+    // Update the document
+    await setDoc(userRef, updateData, { merge: true });
+
+    return { success: true, message: 'Profile updated successfully' };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+};

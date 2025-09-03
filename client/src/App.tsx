@@ -8,6 +8,7 @@ import Home from "@/pages/home";
 import ProductDetailPage from "@/pages/product-detail-page";
 import LoginPage from "@/pages/login";
 import SignupPage from "@/pages/signup";
+import Dashboard from "@/pages/dashboard";
 import NotFound from "@/pages/not-found";
 import ProductsBrowsePage from "@/pages/products-browse";
 // Temporarily disabled design editor imports to fix Konva issues
@@ -22,6 +23,7 @@ import ProductsBrowsePage from "@/pages/products-browse";
 import DebugCategoriesPage from "@/pages/debug-categories";
 import { LoadingProvider, useLoading } from "@/contexts/LoadingContext";
 import { ProductProvider } from "@/contexts/ProductContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 import LoadingScreen from "@/components/LoadingScreen";
 import { usePageTransition } from "@/hooks/usePageTransition";
 import { ExternalNavigationWrapper } from "@/components/ExternalNavigationWrapper";
@@ -46,6 +48,7 @@ function Router() {
       <Route path="/product/:id" component={ProductDetailPage} />
       <Route path="/login" component={LoginPage} />
       <Route path="/signup" component={SignupPage} />
+      <Route path="/dashboard" component={Dashboard} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -66,14 +69,16 @@ function AppContent() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <LoadingProvider>
-        <ProductProvider>
-          <TooltipProvider>
-            <Toaster />
-            <AppContent />
-          </TooltipProvider>
-        </ProductProvider>
-      </LoadingProvider>
+      <AuthProvider>
+        <LoadingProvider>
+          <ProductProvider>
+            <TooltipProvider>
+              <Toaster />
+              <AppContent />
+            </TooltipProvider>
+          </ProductProvider>
+        </LoadingProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
