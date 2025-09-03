@@ -23,7 +23,7 @@ interface ValidationErrors {
 export default function LoginPage() {
   const [formData, setFormData] = useState<LoginForm>({
     email: "",
-    password: ""
+    password: " "
   });
 
   const [errors, setErrors] = useState<ValidationErrors>({});
