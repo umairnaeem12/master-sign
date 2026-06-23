@@ -1,391 +1,124 @@
-import { useState, useEffect, useCallback } from 'react';
-import { 
-  getProductsFunction,
-  getProductByIdFunction,
-  searchProductsFunction,
-  getProductsByCategoryFunction,
-  getCategoriesFunction,
-  getCategoryByIdFunction,
-  getSubCategoriesFunction,
-  getCategoryWithSubCategoriesFunction,
-  getAllCategoriesWithSubCategoriesFunction
-} from '@/lib/firebase';
+import { useState, useCallback } from 'react';
+import { staticProductsService } from '@/data/static-products-service';
 import { ProductCategory, Product, CategoryData } from '@/types/products';
-import { assignImagesToProducts, analyzeProductCategories } from '@/lib/product-image-assigner';
+
+/**
+ * NOTE: Despite the "Firebase" naming, these hooks are now backed by the
+ * bundled static product/category data (see `static-products-service.ts`).
+ *
+ * This was done deliberately for performance: the previous implementation made
+ * Firebase Cloud Function calls on mount, which incurred a network round-trip
+ * (and cold-start latency) and forced every page to render a loading spinner
+ * while waiting. All product/category data is shipped with the app, so we serve
+ * it synchronously instead — data is available on the first render, `loading`
+ * is always `false`, and no loading icon is ever shown.
+ *
+ * The hook signatures are kept identical to the old Firebase versions so no
+ * consumer code needed to change.
+ */
 
 // Products hook
 export function useFirebaseProducts() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [hasFetched, setHasFetched] = useState(false);
+  // Seed synchronously so data is present on the very first render (no spinner).
+  const [products, setProducts] = useState<Product[]>(() => staticProductsService.getAllProducts());
+  const [error] = useState<string | null>(null);
 
   const fetchProducts = useCallback(async () => {
-    if (hasFetched) {
-      console.log('🔄 Products already fetched, skipping...');
-      return;
-    }
-    
-    try {
-      setLoading(true);
-      setError(null);
-      setHasFetched(true);
-      
-      console.log('🔄 Fetching products from Firebase...');
-      const result = await getProductsFunction({});
-      const response = result.data as any;
-      
-      if (response.success) {
-        console.log(`✅ Successfully fetched ${response.data?.length || 0} products`);
-        
-        // Analyze categories for debugging
-        analyzeProductCategories(response.data || []);
-        
-        // Assign images to products at runtime
-        const productsWithImages = assignImagesToProducts(response.data || []);
-        console.log(`🖼️ Assigned images to ${productsWithImages.length} products`);
-        setProducts(productsWithImages);
-      } else {
-        console.error('❌ Failed to fetch products:', response);
-        setError('Failed to fetch products from server');
-      }
-    } catch (err) {
-      console.error('❌ Error fetching products:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch products';
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  }, [hasFetched]);
-
-  // Auto-fetch products on mount
-  useEffect(() => {
-    console.log('🔄 useFirebaseProducts: Auto-fetching products on mount');
-    fetchProducts();
-  }, [fetchProducts]);
+    setProducts(staticProductsService.getAllProducts());
+  }, []);
 
   const fetchProductsByCategory = useCallback(async (category: ProductCategory) => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const result = await getProductsByCategoryFunction({ category });
-      const response = result.data as any;
-      
-      if (response.success) {
-        // Assign images to products at runtime
-        const productsWithImages = assignImagesToProducts(response.data || []);
-        console.log(`🖼️ Assigned images to ${productsWithImages.length} products by category`);
-        setProducts(productsWithImages);
-      } else {
-        setError('Failed to fetch products by category');
-      }
-    } catch (err) {
-      console.error('Error fetching products by category:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch products by category');
-    } finally {
-      setLoading(false);
-    }
+    setProducts(staticProductsService.getProductsByCategory(category));
   }, []);
 
   const fetchProductById = useCallback(async (id: string) => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const result = await getProductByIdFunction({ productId: id });
-      const response = result.data as any;
-      
-      if (response.success) {
-        // Assign images to the product at runtime
-        const productWithImages = assignImagesToProducts([response.data])[0];
-        console.log(`🖼️ Assigned images to product: ${productWithImages.name}`);
-        return productWithImages;
-      } else {
-        setError('Failed to fetch product');
-        return null;
-      }
-    } catch (err) {
-      console.error('Error fetching product:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch product');
-      return null;
-    } finally {
-      setLoading(false);
-    }
+    return staticProductsService.getProductById(id) ?? null;
   }, []);
 
   const searchProducts = useCallback(async (query: string) => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const result = await searchProductsFunction({ query });
-      const response = result.data as any;
-      
-      if (response.success) {
-        // Assign images to products at runtime
-        const productsWithImages = assignImagesToProducts(response.data || []);
-        console.log(`🖼️ Assigned images to ${productsWithImages.length} products from search`);
-        setProducts(productsWithImages);
-      } else {
-        setError('Failed to search products');
-      }
-    } catch (err) {
-      console.error('Error searching products:', err);
-      setError(err instanceof Error ? err.message : 'Failed to search products');
-    } finally {
-      setLoading(false);
-    }
+    setProducts(staticProductsService.searchProducts(query));
   }, []);
 
   return {
     products,
-    loading,
+    loading: false,
     error,
     fetchProducts,
     fetchProductsByCategory,
     fetchProductById,
     searchProducts,
-    refetch: fetchProducts
+    refetch: fetchProducts,
   };
 }
 
 // Categories hook
 export function useFirebaseCategories() {
-  const [categories, setCategories] = useState<CategoryData[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [hasFetched, setHasFetched] = useState(false);
+  const [categories, setCategories] = useState<CategoryData[]>(() => staticProductsService.getCategories());
+  const [error] = useState<string | null>(null);
 
   const fetchCategories = useCallback(async () => {
-    if (hasFetched) {
-      console.log('🔄 Categories already fetched, skipping...');
-      return;
-    }
-    
-    try {
-      setLoading(true);
-      setError(null);
-      setHasFetched(true);
-      
-      console.log('🔄 Fetching categories from Firebase...');
-      const result = await getCategoriesFunction({});
-      const response = result.data as any;
-      
-      if (response.success) {
-        console.log(`✅ Successfully fetched ${response.data?.length || 0} categories`);
-        setCategories(response.data || []);
-      } else {
-        console.error('❌ Failed to fetch categories:', response);
-        setError('Failed to fetch categories from server');
-      }
-    } catch (err) {
-      console.error('Error fetching categories:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch categories';
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  }, [hasFetched]);
-
-  // Auto-fetch categories on mount
-  useEffect(() => {
-    console.log('🔄 useFirebaseCategories: Auto-fetching categories on mount');
-    fetchCategories();
-  }, [fetchCategories]);
+    setCategories(staticProductsService.getCategories());
+  }, []);
 
   const fetchCategoryById = useCallback(async (categoryId: string) => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const result = await getCategoryByIdFunction({ categoryId });
-      const response = result.data as any;
-      
-      if (response.success) {
-        return response.data;
-      } else {
-        setError('Failed to fetch category');
-        return null;
-      }
-    } catch (err) {
-      console.error('Error fetching category:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch category');
-      return null;
-    } finally {
-      setLoading(false);
-    }
+    return staticProductsService.getCategoryById(categoryId as ProductCategory) ?? null;
   }, []);
 
   const fetchSubCategories = useCallback(async (categoryId?: string) => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const result = await getSubCategoriesFunction({ categoryId });
-      const response = result.data as any;
-      
-      if (response.success) {
-        return response.data || [];
-      } else {
-        setError('Failed to fetch sub-categories');
-        return [];
-      }
-    } catch (err) {
-      console.error('Error fetching sub-categories:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch sub-categories');
-      return [];
-    } finally {
-      setLoading(false);
+    if (categoryId) {
+      const category = staticProductsService.getCategoryById(categoryId as ProductCategory);
+      return category?.featuredSubCategories ?? [];
     }
+    return staticProductsService.getCategories().flatMap((c) => c.featuredSubCategories ?? []);
   }, []);
 
   const fetchCategoryWithSubCategories = useCallback(async (categoryId: string) => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const result = await getCategoryWithSubCategoriesFunction({ categoryId });
-      const response = result.data as any;
-      
-      if (response.success) {
-        return response.data;
-      } else {
-        setError('Failed to fetch category with sub-categories');
-        return null;
-      }
-    } catch (err) {
-      console.error('Error fetching category with sub-categories:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch category with sub-categories');
-      return null;
-    } finally {
-      setLoading(false);
-    }
+    return staticProductsService.getCategoryById(categoryId as ProductCategory) ?? null;
   }, []);
 
   const fetchAllCategoriesWithSubCategories = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const result = await getAllCategoriesWithSubCategoriesFunction({});
-      const response = result.data as any;
-      
-      if (response.success) {
-        setCategories(response.data || []);
-      } else {
-        setError('Failed to fetch categories with sub-categories');
-      }
-    } catch (err) {
-      console.error('Error fetching categories with sub-categories:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch categories with sub-categories');
-    } finally {
-      setLoading(false);
-    }
+    setCategories(staticProductsService.getCategories());
   }, []);
 
   return {
     categories,
-    loading,
+    loading: false,
     error,
     fetchCategories,
     fetchCategoryById,
     fetchSubCategories,
     fetchCategoryWithSubCategories,
-    fetchAllCategoriesWithSubCategories
+    fetchAllCategoriesWithSubCategories,
   };
 }
 
-// Main page hook - only fetches categories, no products
-// This hook should ONLY be used on the home page (/)
-// For other pages that need both products and categories, use useFirebaseProducts and useFirebaseCategories separately
+// Main page hook - only exposes categories
 export function useFirebaseMainPage() {
-  const [categories, setCategories] = useState<CategoryData[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [hasFetched, setHasFetched] = useState(false);
-
-  const fetchCategories = useCallback(async () => {
-    if (hasFetched) {
-      console.log('🔄 Main page: Categories already fetched, skipping...');
-      return;
-    }
-    
-    try {
-      setLoading(true);
-      setError(null);
-      setHasFetched(true);
-      
-      console.log('🔄 Main page: Fetching categories from Firebase...');
-      const result = await getCategoriesFunction({});
-      const response = result.data as any;
-      
-      if (response.success) {
-        console.log(`✅ Main page: Successfully fetched ${response.data?.length || 0} categories`);
-        setCategories(response.data || []);
-      } else {
-        console.error('❌ Main page: Failed to fetch categories:', response);
-        setError('Failed to fetch categories from server');
-      }
-    } catch (err) {
-      console.error('Main page: Error fetching categories:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch categories';
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  }, [hasFetched]);
-
-  // Auto-fetch categories on mount
-  useEffect(() => {
-    console.log('🔄 useFirebaseMainPage: Auto-fetching categories on mount');
-    fetchCategories();
-  }, [fetchCategories]);
+  const [categories] = useState<CategoryData[]>(() => staticProductsService.getCategories());
 
   return {
     categories,
-    loading,
-    error
+    loading: false,
+    error: null as string | null,
   };
 }
 
 // Individual product hook
 export function useFirebaseProduct(productId: string) {
-  const [product, setProduct] = useState<Product | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [product, setProduct] = useState<Product | null>(
+    () => (productId ? staticProductsService.getProductById(productId) ?? null : null)
+  );
+  const [error] = useState<string | null>(null);
 
-  const fetchProduct = useCallback(async () => {
+  const refetch = useCallback(async () => {
     if (!productId) return;
-    
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const result = await getProductByIdFunction({ productId });
-      const response = result.data as any;
-      
-      if (response.success) {
-        setProduct(response.data);
-      } else {
-        setError('Failed to fetch product');
-      }
-    } catch (err) {
-      console.error('Error fetching product:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch product');
-    } finally {
-      setLoading(false);
-    }
+    setProduct(staticProductsService.getProductById(productId) ?? null);
   }, [productId]);
-
-  useEffect(() => {
-    fetchProduct();
-  }, [fetchProduct]);
 
   return {
     product,
-    loading,
+    loading: false,
     error,
-    refetch: fetchProduct
+    refetch,
   };
 }

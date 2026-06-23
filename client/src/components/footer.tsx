@@ -58,12 +58,12 @@ export default function Footer() {
               <img src={logo2} alt="Master Signs" className="w-40 h-13 rounded-xl object-contain" />
               <div>
                 <h3 className="text-2xl font-bold">Master Signs</h3>
-                <p className="text-gray-400">Faith-Driven Excellence</p>
+                <p className="text-gray-400">Professional Signage Solutions</p>
               </div>
             </div>
             <p className="text-gray-300 mb-6 max-w-md">
               Your trusted partner for professional signage solutions. From LED displays to vehicle wraps, 
-              we bring your vision to life with faith-driven excellence and innovative technology.
+              we bring your vision to life with expert craftsmanship and innovative technology.
             </p>
             
             {/* Contact Info */}

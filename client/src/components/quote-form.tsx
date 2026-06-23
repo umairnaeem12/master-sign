@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Quote, Send, X } from "lucide-react";
+import { Quote, Send, X, UploadCloud, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,6 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useStaticQuoteRequests } from "@/hooks/useStaticData";
+import { uploadQuoteFiles } from "@/lib/upload";
 import { fadeInUp, staggerContainer, magneticHover } from "@/lib/animations";
 
 const formSchema = z.object({
@@ -27,11 +28,65 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
+const MAX_FILES = 5;
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+const ACCEPTED_FILE_TYPES =
+  ".jpg,.jpeg,.png,.gif,.webp,.svg,.pdf,.ai,.eps,.psd,.doc,.docx";
+
+const formatFileSize = (bytes: number) => {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
+
 export default function QuoteForm() {
 
   const [uploading, setUploading] = useState(false);
+  const [files, setFiles] = useState<File[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { createQuoteRequest } = useStaticQuoteRequests();
+
+  const addFiles = (incoming: FileList | null) => {
+    if (!incoming || incoming.length === 0) return;
+
+    const accepted: File[] = [...files];
+    for (const file of Array.from(incoming)) {
+      if (accepted.length >= MAX_FILES) {
+        toast({
+          title: "Too many files",
+          description: `You can attach up to ${MAX_FILES} files.`,
+          variant: "destructive",
+        });
+        break;
+      }
+      if (file.size > MAX_FILE_SIZE) {
+        toast({
+          title: "File too large",
+          description: `"${file.name}" exceeds the ${formatFileSize(MAX_FILE_SIZE)} limit.`,
+          variant: "destructive",
+        });
+        continue;
+      }
+      // Skip duplicates (same name + size)
+      if (accepted.some((f) => f.name === file.name && f.size === file.size)) {
+        continue;
+      }
+      accepted.push(file);
+    }
+    setFiles(accepted);
+  };
+
+  const removeFile = (index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+    addFiles(e.dataTransfer.files);
+  };
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -50,17 +105,20 @@ export default function QuoteForm() {
   const onSubmit = async (data: FormData) => {
     try {
       setUploading(true);
-      
+
+      // Upload any attached files to Firebase Storage and collect their URLs
+      const fileUrls = await uploadQuoteFiles(files);
+
       // Create quote request
       const quoteData = {
         ...data,
         service_type: data.serviceType, // Map serviceType to service_type
-        files: [],
+        files: fileUrls,
         status: 'pending'
       };
 
       const { error } = await createQuoteRequest(quoteData);
-      
+
       if (error) {
         throw new Error(error);
       }
@@ -69,8 +127,9 @@ export default function QuoteForm() {
         title: "Quote Request Submitted!",
         description: "We'll respond within 24 hours with your personalized quote.",
       });
-      
+
       form.reset();
+      setFiles([]);
 
       
     } catch (error) {
@@ -319,7 +378,85 @@ export default function QuoteForm() {
                     )}
                   />
 
+                  {/* File Upload */}
+                  <FormItem>
+                    <FormLabel className="text-white font-semibold text-sm sm:text-base">
+                      Attach Files <span className="text-gray-400 font-normal">(optional)</span>
+                    </FormLabel>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      multiple
+                      accept={ACCEPTED_FILE_TYPES}
+                      className="hidden"
+                      onChange={(e) => {
+                        addFiles(e.target.files);
+                        // Reset so selecting the same file again re-triggers onChange
+                        e.target.value = "";
+                      }}
+                      data-testid="input-files"
+                    />
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => fileInputRef.current?.click()}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          fileInputRef.current?.click();
+                        }
+                      }}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setIsDragging(true);
+                      }}
+                      onDragLeave={(e) => {
+                        e.preventDefault();
+                        setIsDragging(false);
+                      }}
+                      onDrop={handleDrop}
+                      className={`flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-4 py-6 sm:py-8 text-center cursor-pointer transition-all duration-200 ${
+                        isDragging
+                          ? "border-[var(--master-blue)] bg-[var(--master-blue)] bg-opacity-10"
+                          : "border-white border-opacity-20 bg-white bg-opacity-5 hover:bg-opacity-10"
+                      }`}
+                      data-testid="dropzone-files"
+                    >
+                      <UploadCloud className="h-7 w-7 sm:h-8 sm:w-8 text-[var(--master-blue)]" />
+                      <p className="text-white text-sm sm:text-base font-medium">
+                        <span className="text-[var(--master-blue)]">Click to upload</span> or drag and drop
+                      </p>
+                      <p className="text-gray-400 text-xs">
+                        Images, PDF, AI, EPS, PSD or DOC — up to {formatFileSize(MAX_FILE_SIZE)} each (max {MAX_FILES} files)
+                      </p>
+                    </div>
 
+                    {files.length > 0 && (
+                      <ul className="mt-3 space-y-2" data-testid="file-list">
+                        {files.map((file, index) => (
+                          <li
+                            key={`${file.name}-${file.size}-${index}`}
+                            className="flex items-center justify-between gap-3 rounded-xl bg-white bg-opacity-10 border border-white border-opacity-20 px-3 py-2"
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              <FileText className="h-4 w-4 text-[var(--master-blue)] flex-shrink-0" />
+                              <span className="text-white text-xs sm:text-sm truncate">{file.name}</span>
+                              <span className="text-gray-400 text-xs flex-shrink-0">({formatFileSize(file.size)})</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => removeFile(index)}
+                              className="text-gray-400 hover:text-red-400 transition-colors flex-shrink-0"
+                              aria-label={`Remove ${file.name}`}
+                              data-testid={`remove-file-${index}`}
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </FormItem>
 
                   {/* Submit Button */}
                   <div className="text-center pt-6">

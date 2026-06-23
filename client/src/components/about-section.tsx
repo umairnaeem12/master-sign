@@ -9,7 +9,7 @@ export default function AboutSection() {
     {
       icon: Handshake,
       title: "Integrity First",
-      description: "Our faith-driven values guide every interaction, ensuring honesty, reliability, and exceptional service in everything we do."
+      description: "Our core values guide every interaction, ensuring honesty, reliability, and exceptional service in everything we do."
     },
     {
       icon: Brain,
@@ -25,7 +25,7 @@ export default function AboutSection() {
 
   const stats = [
     { value: "500+", label: "Happy Clients" },
-    { value: "15+", label: "Years Experience" },
+    { value: "50+", label: "Years Experience" },
     { value: "98%", label: "Satisfaction Rate" }
   ];
 
@@ -46,10 +46,10 @@ export default function AboutSection() {
                 <span className="text-white font-semibold">Our Story</span>
             </div>
             <h2 className="text-4xl lg:text-5xl font-bold text-[var(--master-black)] mb-6">
-              Faith-Driven Excellence in Every Sign
+              Excellence in Every Sign
             </h2>
             <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-              For over 15 years, Master Signs has been a family-owned cornerstone of our community, 
+              For over 50 years, Master Signs has been a trusted cornerstone of our community,
               combining traditional craftsmanship with cutting-edge technology to deliver signage solutions 
               that truly make a difference.
             </p>

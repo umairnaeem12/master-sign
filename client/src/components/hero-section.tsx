@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { fadeInUp, staggerContainer, magneticHover } from "@/lib/animations";
 import { getImageUrl } from "@/lib/image-utils";
 import { ExternalNavigationButton } from "@/components/ExternalNavigationButton";
+import ScheduleSiteVisit from "@/components/ScheduleSiteVisit";
+import { CalendarCheck } from "lucide-react";
 
 export default function HeroSection() {
   const scrollToQuote = () => {
@@ -58,18 +60,7 @@ export default function HeroSection() {
             animate="animate"
             variants={staggerContainer}
           >
-            {/* Enhanced Promotional Badge */}
-            <motion.div 
-              className="inline-flex items-center space-x-2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-black rounded-full px-6 py-3 mb-8 shadow-lg border border-yellow-300/50"
-              variants={fadeInUp}
-              whileHover={{ scale: 1.05, y: -2 }}
-              transition={{ type: "spring", stiffness: 300 }}
-            >
-              <Star className="h-5 w-5 text-black fill-current animate-pulse" />
-              <span className="text-sm font-bold tracking-wide">🔥 LIMITED TIME OFFER</span>
-            </motion.div>
-
-            <motion.h1 
+            <motion.h1
               className="text-5xl lg:text-7xl font-bold mb-8 leading-tight"
               variants={fadeInUp}
             >
@@ -110,8 +101,8 @@ export default function HeroSection() {
             {/* Enhanced Key Benefits */}
             <motion.div className="space-y-4 mb-10" variants={staggerContainer}>
               {[
-                "Faith-driven, family-owned excellence",
-                "15+ years of proven expertise",
+                "Dedicated to quality and craftsmanship",
+                "50+ years of proven expertise",
                 "Complete design to installation service",
                 "Local community focus with professional results"
               ].map((benefit, index) => (
@@ -147,7 +138,7 @@ export default function HeroSection() {
                 </Button>
               </motion.div>
               <motion.div variants={magneticHover}>
-                <ExternalNavigationButton 
+                <ExternalNavigationButton
                   url="https://animated-cheesecake-a81f47.netlify.app/"
                   variant="outline"
                   size="lg"
@@ -157,6 +148,15 @@ export default function HeroSection() {
                   Start Designing
                 </ExternalNavigationButton>
               </motion.div>
+              {/* <motion.div variants={magneticHover}>
+                <ScheduleSiteVisit
+                  size="lg"
+                  className="bg-white text-blue-700 hover:bg-blue-50 font-semibold px-10 py-5 rounded-2xl text-xl transition-all duration-300 shadow-xl"
+                >
+                  <CalendarCheck className="mr-3 h-6 w-6" />
+                  Schedule a Site Visit
+                </ScheduleSiteVisit>
+              </motion.div> */}
             </motion.div>
           </motion.div>
 

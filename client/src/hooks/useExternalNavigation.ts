@@ -1,16 +1,12 @@
 import { useState } from 'react';
 
 export const useExternalNavigation = () => {
-  const [isNavigating, setIsNavigating] = useState(false);
+  // Kept for API compatibility; external links now open immediately with no
+  // artificial loading screen.
+  const [isNavigating] = useState(false);
 
-  const navigateToExternal = (url: string, delay: number = 2000) => {
-    setIsNavigating(true);
-    
-    // Show loading screen for specified delay
-    setTimeout(() => {
-      window.open(url, '_blank', 'noopener,noreferrer');
-      setIsNavigating(false);
-    }, delay);
+  const navigateToExternal = (url: string) => {
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   return {

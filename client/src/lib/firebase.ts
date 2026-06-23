@@ -3,6 +3,7 @@ import { initializeApp } from 'firebase/app';
 import { getFunctions, httpsCallable, connectFunctionsEmulator } from 'firebase/functions';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 
 // Firebase configuration
 const firebaseConfig = {
@@ -21,6 +22,7 @@ const app = initializeApp(firebaseConfig);
 const functions = getFunctions(app);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const storage = getStorage(app);
 
 // Hybrid setup: Local functions + Production Firestore
 if (import.meta.env.DEV) {
@@ -72,4 +74,4 @@ export const calculateTurnaroundFunction = httpsCallable(functions, 'calculateTu
 // Order Functions
 export const processOrderFunction = httpsCallable(functions, 'processOrderFunction');
 
-export { app, functions, auth, db };
+export { app, functions, auth, db, storage };

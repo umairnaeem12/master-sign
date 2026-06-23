@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Phone, Mail, MapPin, User, Search, ShoppingCart, Menu, X, ChevronDown, Palette } from "lucide-react";
+import { Phone, Mail, MapPin, User, Search, ShoppingCart, Menu, X, ChevronDown, Palette, FileText, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -11,6 +11,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLocation } from "wouter";
 import logo1 from "@/assets/1.png";
 import { StartDesigningButton } from "@/components/ExternalNavigationButton";
+import ScheduleSiteVisit from "@/components/ScheduleSiteVisit";
+import { CalendarCheck } from "lucide-react";
 
 export default function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -22,6 +24,17 @@ export default function Navigation() {
     const element = document.getElementById(sectionId);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
+    }
+    setIsMobileMenuOpen(false);
+  };
+
+  const goToQuote = () => {
+    const element = document.getElementById('quote');
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      // Quote form lives on the home page; navigate there if we're elsewhere.
+      setLocation('/');
     }
     setIsMobileMenuOpen(false);
   };
@@ -151,8 +164,24 @@ export default function Navigation() {
         transition={{ duration: 0.4 }}
       >
         <div className="max-w-7xl mx-auto px-4 flex justify-between items-center">
-          <div className="flex items-center space-x-6">
-            <span>🎉 Free Quote + Design Consultation - Limited Time!</span>
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={goToQuote}
+              className="flex items-center gap-1.5 font-semibold hover:underline underline-offset-4 transition-colors"
+              data-testid="cta-request-quote"
+            >
+              <FileText className="h-4 w-4" />
+              <span>Request Quote</span>
+            </button>
+            <span className="text-white/50">/</span>
+            <button
+              onClick={goToQuote}
+              className="flex items-center gap-1.5 font-semibold hover:underline underline-offset-4 transition-colors"
+              data-testid="cta-upload-plans"
+            >
+              <Upload className="h-4 w-4" />
+              <span>Upload Plans</span>
+            </button>
           </div>
           <div className="hidden md:flex items-center space-x-4">
             <div className="flex items-center space-x-2">
@@ -300,8 +329,8 @@ export default function Navigation() {
                 </div>
                 
             {/* Bottom Row */}
-            <div className="flex items-center justify-between py-3">
-              <div className="flex items-center space-x-8">
+            <div className="flex items-center justify-between py-3 gap-4">
+              <div className="flex items-center space-x-5 min-w-0">
                 {bottomRowCategories.map((category, index) => (
                   <div
                     key={index}
@@ -339,11 +368,21 @@ export default function Navigation() {
                 ))}
               </div>
               
-              <div className="flex items-center space-x-4 text-sm">
-                <span className="text-gray-600">Need help?</span>
-                <div className="flex items-center space-x-2 text-blue-600 font-semibold">
-                  <Phone className="h-4 w-4" />
-                  <span>(555) 123-SIGN</span>
+              <div className="flex items-center space-x-4 text-sm flex-shrink-0 whitespace-nowrap">
+                <ScheduleSiteVisit
+                  variant="outline"
+                  size="sm"
+                  className="border-blue-600 text-blue-600 hover:bg-blue-50 font-semibold rounded-full whitespace-nowrap"
+                >
+                  <CalendarCheck className="mr-1.5 h-4 w-4" />
+                  Schedule a Site Visit
+                </ScheduleSiteVisit>
+                <div className="hidden xl:flex items-center space-x-2 text-gray-600">
+                  <span>Need help?</span>
+                  <div className="flex items-center space-x-2 text-blue-600 font-semibold">
+                    <Phone className="h-4 w-4" />
+                    <span>(555) 123-SIGN</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -442,7 +481,14 @@ export default function Navigation() {
                     </Button>
                   </div>
                 )}
-                <StartDesigningButton 
+                <ScheduleSiteVisit
+                  className="w-full border-blue-600 text-blue-600 hover:bg-blue-50 font-semibold py-3 rounded-lg transition-colors"
+                  variant="outline"
+                >
+                  <CalendarCheck className="mr-2 h-5 w-5" />
+                  Schedule a Site Visit
+                </ScheduleSiteVisit>
+                <StartDesigningButton
                   className="w-full bg-blue-600 text-white hover:bg-blue-700 font-semibold py-3 rounded-lg transition-colors"
                 />
               </div>

@@ -18,11 +18,11 @@ export default function Home() {
     
     const metaDescription = document.querySelector('meta[name="description"]');
     if (metaDescription) {
-      metaDescription.setAttribute('content', 'Faith-driven, family-owned signage company offering professional vehicle wraps, LED boards, laser engraving, and custom signs. Local, innovative, and trustworthy.');
+      metaDescription.setAttribute('content', 'Professional signage company offering professional vehicle wraps, LED boards, laser engraving, and custom signs. Local, innovative, and trustworthy.');
     } else {
       const meta = document.createElement('meta');
       meta.name = 'description';
-      meta.content = 'Faith-driven, family-owned signage company offering professional vehicle wraps, LED boards, laser engraving, and custom signs. Local, innovative, and trustworthy.';
+      meta.content = 'Professional signage company offering professional vehicle wraps, LED boards, laser engraving, and custom signs. Local, innovative, and trustworthy.';
       document.getElementsByTagName('head')[0].appendChild(meta);
     }
   }, []);

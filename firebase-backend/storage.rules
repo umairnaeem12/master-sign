@@ -29,8 +29,26 @@ service firebase.storage {
     
     // Quote request attachments - users can only access their own
     match /quoteRequests/{requestId}/{fileId} {
-      allow read, write: if request.auth != null && 
+      allow read, write: if request.auth != null &&
         firestore.get(/databases/(default)/documents/quoteRequests/$(requestId)).data.email == request.auth.token.email;
+    }
+
+    // Public quote-form attachments - the quote form is open to anonymous
+    // visitors, so uploads here do NOT require auth. Abuse is limited by a
+    // size cap and an allow-list of content types. Files are not publicly
+    // listable/readable; the business accesses them via the unguessable,
+    // token-bearing download URL stored on the quote request.
+    match /quote-uploads/{folder}/{fileName} {
+      allow read: if false;
+      allow write: if request.resource.size < 10 * 1024 * 1024
+        && (
+          request.resource.contentType.matches('image/.*')
+          || request.resource.contentType == 'application/pdf'
+          || request.resource.contentType == 'application/postscript'
+          || request.resource.contentType == 'application/msword'
+          || request.resource.contentType == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+          || request.resource.contentType == 'application/octet-stream'
+        );
     }
   }
 }

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 
 interface LoadingContextType {
   isLoading: boolean;
@@ -10,26 +10,11 @@ interface LoadingContextType {
 const LoadingContext = createContext<LoadingContextType | undefined>(undefined);
 
 export function LoadingProvider({ children }: { children: React.ReactNode }) {
-  const [isLoading, setIsLoading] = useState(true);
-  const initialLoadComplete = useRef(false);
+  // The app and all of its data are served synchronously, so there is nothing
+  // to wait for on startup. Start un-loaded and never show an artificial loader.
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Initial loading effect
-  useEffect(() => {
-    if (!initialLoadComplete.current) {
-      const timer = setTimeout(() => {
-        setIsLoading(false);
-        initialLoadComplete.current = true;
-      }, 2000); // Show loader for 2 seconds on initial load
-
-      return () => clearTimeout(timer);
-    }
-  }, []);
-
-  const startLoading = () => {
-    if (initialLoadComplete.current) {
-      setIsLoading(true);
-    }
-  };
+  const startLoading = () => setIsLoading(true);
   const stopLoading = () => setIsLoading(false);
 
   return (

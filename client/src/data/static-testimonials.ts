@@ -41,7 +41,7 @@ export const STATIC_TESTIMONIALS: StaticTestimonial[] = [
     name: "Michael Johnson",
     company: "Johnson Pharmacy",
     rating: "5",
-    content: "Master Signs helped us rebrand our entire storefront with beautiful architectural signage. The faith-driven approach and family values really show in their work.",
+    content: "Master Signs helped us rebrand our entire storefront with beautiful architectural signage. Their professionalism and attention to detail really show in their work.",
     avatar: "MJ",
     featured: "true"
   },
